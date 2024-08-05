@@ -1,5 +1,5 @@
 {
-  "name": "ai-interview",
+  "name": "ai-interview-moker",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -11,35 +11,33 @@
     "db:studio": "npx drizzle-kit studio"
   },
   "dependencies": {
-    "@clerk/nextjs": "^5.2.8",
-    "@google-cloud/speech": "^6.7.0",
-    "@google-cloud/text-to-speech": "^5.3.0",
-    "@google/generative-ai": "^0.16.0",
-    "@neondatabase/serverless": "^0.9.4",
-    "@radix-ui/react-dialog": "^1.1.1",
-    "@radix-ui/react-slot": "^1.1.0",
-    "axios": "^1.7.3",
+    "@clerk/nextjs": "^5.1.4",
+    "@google/generative-ai": "^0.12.0",
+    "@neondatabase/serverless": "^0.9.3",
+    "@radix-ui/react-collapsible": "^1.0.3",
+    "@radix-ui/react-dialog": "^1.0.5",
+    "@radix-ui/react-slot": "^1.0.2",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
-    "drizzle-orm": "^0.32.1",
-    "formidable": "^3.5.1",
-    "lucide-react": "^0.417.0",
-    "next": "14.2.5",
-    "next-connect": "^1.0.0",
-    "pdf-parse": "^1.1.1",
-    "pdfjs-dist": "^4.5.136",
-    "pg": "^8.12.0",
+    "drizzle-orm": "^0.31.2",
+    "lucide-react": "^0.390.0",
+    "moment": "^2.30.1",
+    "next": "14.2.3",
+    "next-themes": "^0.3.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "tailwind-merge": "^2.4.0",
-    "tailwindcss-animate": "^1.0.7"
+    "react-hook-speech-to-text": "^0.8.0",
+    "react-webcam": "^7.2.0",
+    "sonner": "^1.5.0",
+    "tailwind-merge": "^2.3.0",
+    "tailwindcss-animate": "^1.0.7",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "@types/node": "22.0.0",
     "@types/react": "18.3.3",
-    "drizzle-kit": "^0.23.1",
+    "drizzle-kit": "^0.22.5",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-    "typescript": "5.5.4"
+    "typescript": "5.4.5"
   }
 }
