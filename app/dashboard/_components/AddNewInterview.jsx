@@ -45,7 +45,7 @@ function AddNewInterview() {
       console.log("Raw response:", responseText);
       
       // Extract and sanitize JSON part of the response
-      const jsonMatch = responseText.match(/\[(.*?)\]/s);
+      const jsonMatch = responseText.match(/\[.*?\]/s);
       if (!jsonMatch) {
         throw new Error("No valid JSON array found in the response");
       }
@@ -74,11 +74,9 @@ function AddNewInterview() {
         router.push(`dashboard/interview/${res[0]?.mockId}`);
       } catch (jsonError) {
         console.error("JSON parsing error:", jsonError);
-        toast.error("An error occurred while parsing the response. Please try again.");
       }
     } catch (error) {
       console.error("Error fetching interview questions:", error);
-      toast.error("An error occurred while generating questions. Please try again.");
     } finally {
       setLoading(false);
     }

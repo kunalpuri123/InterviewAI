@@ -1,8 +1,8 @@
 "use client";
-import { Button } from "@/components/ui/button";
-import Image from "next/image";
-import React, { useEffect, useState } from "react";
+
+import React, { useState, useEffect, useRef } from "react";
 import Webcam from "react-webcam";
+import { Button } from "@/components/ui/button";
 import useSpeechToText from "react-hook-speech-to-text";
 import { Mic, StopCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ import { db } from "@/utils/db";
 import { UserAnswer } from "@/utils/schema";
 import { useUser } from "@clerk/nextjs";
 import moment from "moment";
+import ModelPrediction from "./ModelPrediction";
 
 const RecordAnswerSection = ({
   mockInterviewQuestion,
@@ -20,6 +21,8 @@ const RecordAnswerSection = ({
   const [userAnswer, setUserAnswer] = useState("");
   const { user } = useUser();
   const [loading, setLoading] = useState(false);
+  const [isPlayingQuestion, setIsPlayingQuestion] = useState(false);
+  const [modelFeedback, setModelFeedback] = useState([]);
   const {
     error,
     interimResult,
@@ -32,8 +35,10 @@ const RecordAnswerSection = ({
     continuous: true,
     useLegacyResults: false,
   });
+  const audioRef = useRef(null);
+
   useEffect(() => {
-    results.map((result) =>
+    results.forEach((result) =>
       setUserAnswer((prevAns) => prevAns + result?.transcript)
     );
   }, [results]);
@@ -44,49 +49,45 @@ const RecordAnswerSection = ({
     }
   }, [userAnswer]);
 
+  useEffect(() => {
+    if (mockInterviewQuestion?.[activeQuestionIndex]?.audio) {
+      setIsPlayingQuestion(true);
+      audioRef.current?.play();
+    }
+  }, [activeQuestionIndex, mockInterviewQuestion]);
+
   const StartStopRecording = async () => {
     if (isRecording) {
       stopSpeechToText();
-      // if (userAnswer?.length < 10) {
-      //   setLoading(false)
-      //   toast("Error while saving your answer,please record again");
-      //   return;
-      // }
+      setIsPlayingQuestion(false);
     } else {
       startSpeechToText();
     }
   };
 
   const UpdateUserAnswer = async () => {
-    console.log(userAnswer, "########");
     setLoading(true);
+    if (!mockInterviewQuestion?.[activeQuestionIndex]) {
+      console.error("Question data is not available.");
+      return;
+    }
+
     const feedbackPrompt =
       "Question:" +
       mockInterviewQuestion[activeQuestionIndex]?.question +
       ", User Answer:" +
       userAnswer +
-      ",Depends on question and user answer for given interview question " +
-      " please give use rating for answer and feedback as area of improvement if any" +
-      " in just 3 to 5 lines to improve it in JSON format with rating field and feedback field";
-    console.log(
-      "🚀 ~ file: RecordAnswerSection.jsx:38 ~ SaveUserAnswer ~ feedbackPrompt:",
-      feedbackPrompt
-    );
+      ", Depends on question and user answer for given interview question " +
+      "please give a rating for the answer and feedback as area of improvement if any " +
+      "in just 3 to 5 lines to improve it in JSON format with rating field and feedback field";
+
     const result = await chatSession.sendMessage(feedbackPrompt);
-    console.log(
-      "🚀 ~ file: RecordAnswerSection.jsx:46 ~ SaveUserAnswer ~ result:",
-      result
-    );
     const mockJsonResp = result.response
       .text()
       .replace("```json", "")
       .replace("```", "");
-
-    console.log(
-      "🚀 ~ file: RecordAnswerSection.jsx:47 ~ SaveUserAnswer ~ mockJsonResp:",
-      mockJsonResp
-    );
     const JsonfeedbackResp = JSON.parse(mockJsonResp);
+
     const resp = await db.insert(UserAnswer).values({
       mockIdRef: interviewData?.mockId,
       question: mockInterviewQuestion[activeQuestionIndex]?.question,
@@ -107,25 +108,40 @@ const RecordAnswerSection = ({
     setLoading(false);
   };
 
+  const handleModelPredictions = (predictions) => {
+    setModelFeedback(predictions.map(prediction => ({
+      className: prediction.className,
+      probability: parseFloat(prediction.probability).toFixed(2), // Ensure probability is a number
+    })));
+  };
+
   if (error) return <p>Web Speech API is not available in this browser 🤷‍</p>;
+
   return (
-    <div className="flex justify-cente items-center flex-col">
-      <div className="flex flex-col my-20 justify-center items-center bg-black rounded-lg p-5">
-        <Image
-          src={"/webcam.png"}
-          width={200}
-          height={200}
-          className="absolute"
-          alt="webcam"
-          priority
-        />
-        {/* <Webcam
+    <div className="flex justify-center items-center flex-col">
+      <audio
+        ref={audioRef}
+        src={
+          mockInterviewQuestion?.[activeQuestionIndex]?.audio
+            ? `url/to/your/question/audio/file/${mockInterviewQuestion[activeQuestionIndex]?.audio}`
+            : null
+        }
+        onEnded={() => setIsPlayingQuestion(false)}
+      />
+
+      <div className="flex flex-col my-20 justify-center items-center bg-black rounded-lg p-5 relative">
+        <Webcam
+          audio={false}
+          videoConstraints={{ facingMode: "user" }}
           style={{ height: 300, width: "100%", zIndex: 10 }}
           mirrored={true}
-        /> */}
+        />
+
+        <ModelPrediction onPredictions={handleModelPredictions} />
       </div>
+
       <Button
-        disabled={loading}
+        disabled={loading || isPlayingQuestion}
         variant="outline"
         className="my-10"
         onClick={StartStopRecording}
@@ -140,9 +156,15 @@ const RecordAnswerSection = ({
           </h2>
         )}
       </Button>
-      {/* <Button onClick={() => console.log("------", userAnswer)}>
-        Show User Answer
-      </Button> */}
+
+      <div className="mt-5">
+        <h3 className="text-lg font-semibold">Real-time Feedback:</h3>
+        {modelFeedback.map((item, index) => (
+          <p key={index}>
+            {item.className}: {item.probability}
+          </p>
+        ))}
+      </div>
     </div>
   );
 };
