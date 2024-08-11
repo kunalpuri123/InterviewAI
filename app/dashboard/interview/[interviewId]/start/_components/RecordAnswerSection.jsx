@@ -109,13 +109,26 @@ const RecordAnswerSection = ({
   };
 
   const handleModelPredictions = (predictions) => {
-    setModelFeedback(predictions.map(prediction => ({
-      className: prediction.className,
-      probability: parseFloat(prediction.probability).toFixed(2), // Ensure probability is a number
-    })));
+    setModelFeedback(
+      predictions.map((prediction) => ({
+        className: prediction.className,
+        probability: parseFloat(prediction.probability).toFixed(2),
+      }))
+    );
   };
 
   if (error) return <p>Web Speech API is not available in this browser 🤷‍</p>;
+
+  const getBarColor = (className) => {
+    switch (className) {
+      case "Class 1":
+        return "#ff4d4f"; // Red color for Class 1
+      case "Class 2":
+        return "#3b82f6"; // Blue color for Class 2
+      default:
+        return "#e0e0e0"; // Default color
+    }
+  };
 
   return (
     <div className="flex justify-center items-center flex-col">
@@ -157,12 +170,30 @@ const RecordAnswerSection = ({
         )}
       </Button>
 
-      <div className="mt-5">
+      <div className="mt-5 w-full">
         <h3 className="text-lg font-semibold">Real-time Feedback:</h3>
         {modelFeedback.map((item, index) => (
-          <p key={index}>
-            {item.className}: {item.probability}
-          </p>
+          <div key={index} className="mb-2">
+            <div className="text-base font-medium">{item.className}</div>
+            <div
+              style={{
+                backgroundColor: "#e0e0e0",
+                borderRadius: "10px",
+                height: "20px",
+                width: "100%",
+              }}
+            >
+              <div
+                style={{
+                  backgroundColor: getBarColor(item.className),
+                  height: "100%",
+                  borderRadius: "10px",
+                  width: `${item.probability * 100}%`,
+                  transition: "width 0.5s ease-in-out",
+                }}
+              />
+            </div>
+          </div>
         ))}
       </div>
     </div>

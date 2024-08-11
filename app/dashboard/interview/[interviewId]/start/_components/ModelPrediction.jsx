@@ -1,14 +1,12 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from "react";
-import Webcam from "react-webcam";
 import * as tmImage from "@teachablemachine/image";
 
 const ModelPrediction = ({ onPredictions }) => {
   const webcamRef = useRef(null);
   const [model, setModel] = useState(null);
-  const [maxPredictions, setMaxPredictions] = useState(0);
-  const [labelContainer, setLabelContainer] = useState([]);
+  const [maxPrediction, setMaxPrediction] = useState(null); // To store the prediction with the highest probability
 
   const URL = "https://teachablemachine.withgoogle.com/models/HwhJHY8IR/";
 
@@ -20,7 +18,6 @@ const ModelPrediction = ({ onPredictions }) => {
       try {
         const model = await tmImage.load(modelURL, metadataURL);
         setModel(model);
-        setMaxPredictions(model.getTotalClasses());
       } catch (error) {
         console.error("Error loading model:", error);
       }
@@ -31,12 +28,11 @@ const ModelPrediction = ({ onPredictions }) => {
 
   useEffect(() => {
     const setupWebcam = async () => {
-      if (webcamRef.current && model) {
+      if (model) {
         const webcam = new tmImage.Webcam(200, 200, true); // width, height, flip
         await webcam.setup();
         await webcam.play();
-        webcamRef.current.appendChild(webcam.canvas);
-        setLabelContainer(new Array(maxPredictions).fill(""));
+        webcamRef.current = webcam; // Store the webcam instance in the ref
         window.requestAnimationFrame(loop);
 
         async function loop() {
@@ -48,30 +44,40 @@ const ModelPrediction = ({ onPredictions }) => {
     };
 
     setupWebcam();
-  }, [model, maxPredictions]);
+  }, [model]);
 
   const predict = async (webcam, model) => {
     const prediction = await model.predict(webcam.canvas);
-    const predictions = prediction.map(p => ({
-      className: p.className,
-      probability: parseFloat(p.probability).toFixed(2), // Ensure probability is a number
-    }));
+    const maxPrediction = prediction.reduce((prev, current) =>
+      prev.probability > current.probability ? prev : current
+    );
+
+    setMaxPrediction(maxPrediction);
 
     if (onPredictions) {
-      onPredictions(predictions);
+      onPredictions([maxPrediction]); // Sending the highest prediction only
     }
-    
-    setLabelContainer(predictions);
   };
 
   return (
-    <div>
-      <div ref={webcamRef}></div>
-      <div id="label-container">
-        {labelContainer.map((label, index) => (
-          <div key={index}>{label.className}: {label.probability}</div>
-        ))}
-      </div>
+    <div style={{"opacity": 0}}>
+      {/* Display a progress bar for the prediction with the highest probability */}
+      {maxPrediction && (
+        <div style={{ margin: "20px 0" }}>
+          <div>{maxPrediction.className}</div>
+          <div style={{ backgroundColor: "#e0e0e0", borderRadius: "10px", height: "20px", width: "100%" }}>
+            <div
+              style={{
+                backgroundColor: "#3b82f6",
+                height: "100%",
+                borderRadius: "10px",
+                width: `${maxPrediction.probability * 100}%`, // Scale probability to percentage
+                transition: "width 0.5s ease-in-out",
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

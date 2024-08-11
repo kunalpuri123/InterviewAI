@@ -33,7 +33,7 @@ function AddNewInterview() {
     e.preventDefault();
     setLoading(true);
   
-    const inputPrompt = `Job position: ${jobPosition}, Job Description: ${jobDescription}, Years of Experience: ${jobExperience}, Depends on Job Position, Job Description and Years of Experience give us ${process.env.NEXT_PUBLIC_INTERVIEW_QUESTION_COUNT} Interview question along with Answer in JSON format, Give us question and Answer field on JSON,Each question and answer should be in the format:
+    const inputPrompt = `Job position: ${jobPosition}, Job Description: ${jobDescription}, Years of Experience: ${jobExperience}, Based on the Job Position, Job Description, and Years of Experience, provide ${process.env.NEXT_PUBLIC_INTERVIEW_QUESTION_COUNT} interview questions along with answers in JSON format. Each question and answer should be in the following format:
     {
       "question": "Your question here",
       "answer": "Your answer here"
@@ -43,8 +43,8 @@ function AddNewInterview() {
       const result = await chatSession.sendMessage(inputPrompt);
       const responseText = await result.response.text();
       console.log("Raw response:", responseText);
-      
-      // Extract and sanitize JSON part of the response
+  
+      // Attempt to extract the JSON part from the response
       const jsonMatch = responseText.match(/\[.*?\]/s);
       if (!jsonMatch) {
         throw new Error("No valid JSON array found in the response");
@@ -57,7 +57,7 @@ function AddNewInterview() {
         const mockResponse = JSON.parse(jsonResponsePart.trim());
         console.log("Parsed JSON response:", mockResponse);
         setJsonResponse(mockResponse);
-        
+  
         const jsonString = JSON.stringify(mockResponse);
         const res = await db.insert(MockInterview)
           .values({
@@ -68,19 +68,28 @@ function AddNewInterview() {
             jobExperience: jobExperience,
             createdBy: user?.primaryEmailAddress?.emailAddress,
             createdAt: moment().format('DD-MM-YYYY'),
-          }).returning({ mockId: MockInterview.mockId });
-        
+          })
+          .returning({ mockId: MockInterview.mockId });
+  
         setLoading(false);
         router.push(`dashboard/interview/${res[0]?.mockId}`);
       } catch (jsonError) {
         console.error("JSON parsing error:", jsonError);
+  
+        // Display an error message to the user
+        alert("An error occurred while parsing the AI response. Please try again.");
       }
     } catch (error) {
       console.error("Error fetching interview questions:", error);
+  
+      // Display an error message to the user
+      alert("An error occurred while generating interview questions. Please try again.");
     } finally {
       setLoading(false);
     }
   };
+  
+  
   
   return (
     <div>
