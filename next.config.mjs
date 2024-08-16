@@ -1,4 +1,12 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {};
+// next.config.mjs
 
-export default nextConfig;
+export default {
+    reactStrictMode: false,
+    webpack(config) {
+      // Set fallback for `fs` module to prevent errors
+      config.resolve.fallback = { fs: false };
+  
+      return config;
+    },
+  };
+  

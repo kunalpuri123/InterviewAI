@@ -1,8 +1,8 @@
 "use client";
-
-import React, { useState, useEffect, useRef } from "react";
-import Webcam from "react-webcam";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import React, { useEffect, useState } from "react";
+import Webcam from "react-webcam";
 import useSpeechToText from "react-hook-speech-to-text";
 import { Mic, StopCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -11,7 +11,8 @@ import { db } from "@/utils/db";
 import { UserAnswer } from "@/utils/schema";
 import { useUser } from "@clerk/nextjs";
 import moment from "moment";
-import ModelPrediction from "./ModelPrediction";
+import AudioAnalysis from "./AudioAnalysisModal "; // Import AudioAnalysis component
+import ModelPrediction from "./ModelPrediction"; // Import webcam prediction component
 
 const RecordAnswerSection = ({
   mockInterviewQuestion,
@@ -21,12 +22,15 @@ const RecordAnswerSection = ({
   const [userAnswer, setUserAnswer] = useState("");
   const { user } = useUser();
   const [loading, setLoading] = useState(false);
-  const [isPlayingQuestion, setIsPlayingQuestion] = useState(false);
-  const [modelFeedback, setModelFeedback] = useState([]);
+  const [isRecording, setIsRecording] = useState(false);
+  const [webcamPredictions, setWebcamPredictions] = useState(null);
+  const [audioFeedback, setAudioFeedback] = useState(null);
+  const [webcamFeedback, setWebcamFeedback] = useState(null);
+
   const {
     error,
     interimResult,
-    isRecording,
+    isRecording: isRecordingSpeech,
     results,
     startSpeechToText,
     stopSpeechToText,
@@ -35,59 +39,59 @@ const RecordAnswerSection = ({
     continuous: true,
     useLegacyResults: false,
   });
-  const audioRef = useRef(null);
 
   useEffect(() => {
-    results.forEach((result) =>
+    results.map((result) =>
       setUserAnswer((prevAns) => prevAns + result?.transcript)
     );
   }, [results]);
 
   useEffect(() => {
-    if (!isRecording && userAnswer.length > 10) {
+    if (!isRecordingSpeech && userAnswer.length > 10) {
       UpdateUserAnswer();
     }
   }, [userAnswer]);
 
-  useEffect(() => {
-    if (mockInterviewQuestion?.[activeQuestionIndex]?.audio) {
-      setIsPlayingQuestion(true);
-      audioRef.current?.play();
-    }
-  }, [activeQuestionIndex, mockInterviewQuestion]);
-
   const StartStopRecording = async () => {
     if (isRecording) {
       stopSpeechToText();
-      setIsPlayingQuestion(false);
+      setIsRecording(false);
     } else {
       startSpeechToText();
+      setIsRecording(true);
     }
   };
 
   const UpdateUserAnswer = async () => {
+    console.log(userAnswer, "########");
     setLoading(true);
-    if (!mockInterviewQuestion?.[activeQuestionIndex]) {
-      console.error("Question data is not available.");
-      return;
-    }
-
     const feedbackPrompt =
       "Question:" +
       mockInterviewQuestion[activeQuestionIndex]?.question +
       ", User Answer:" +
       userAnswer +
-      ", Depends on question and user answer for given interview question " +
-      "please give a rating for the answer and feedback as area of improvement if any " +
-      "in just 3 to 5 lines to improve it in JSON format with rating field and feedback field";
-
+      ",Depends on question and user answer for given interview question " +
+      " please give use rating for answer and feedback as area of improvement if any" +
+      " in just 3 to 5 lines to improve it in JSON format with rating field and feedback field";
+    console.log(
+      "🚀 ~ file: RecordAnswerSection.jsx:38 ~ SaveUserAnswer ~ feedbackPrompt:",
+      feedbackPrompt
+    );
     const result = await chatSession.sendMessage(feedbackPrompt);
+    console.log(
+      "🚀 ~ file: RecordAnswerSection.jsx:46 ~ SaveUserAnswer ~ result:",
+      result
+    );
     const mockJsonResp = result.response
       .text()
-      .replace("```json", "")
-      .replace("```", "");
-    const JsonfeedbackResp = JSON.parse(mockJsonResp);
+      .replace("json", "")
+      .replace("", "");
 
+    console.log(
+      "🚀 ~ file: RecordAnswerSection.jsx:47 ~ SaveUserAnswer ~ mockJsonResp:",
+      mockJsonResp
+    );
+    const JsonfeedbackResp = JSON.parse(mockJsonResp);
     const resp = await db.insert(UserAnswer).values({
       mockIdRef: interviewData?.mockId,
       question: mockInterviewQuestion[activeQuestionIndex]?.question,
@@ -108,53 +112,46 @@ const RecordAnswerSection = ({
     setLoading(false);
   };
 
-  const handleModelPredictions = (predictions) => {
-    setModelFeedback(
-      predictions.map((prediction) => ({
-        className: prediction.className,
-        probability: parseFloat(prediction.probability).toFixed(2),
-      }))
-    );
+  const handleWebcamPredictions = (predictions) => {
+    setWebcamPredictions(predictions);
+    if (predictions.length > 0) {
+      setWebcamFeedback(
+        `Prediction: ${predictions[0].className}, Probability: ${(predictions[0].probability * 100).toFixed(2)}%`
+      );
+    }
+  };
+
+  const handleAudioFeedback = (predictions) => {
+    if (predictions.length > 0) {
+      setAudioFeedback(
+        `Prediction: ${predictions[0].label} : ${predictions[0].score}%`
+      );
+    }
   };
 
   if (error) return <p>Web Speech API is not available in this browser 🤷‍</p>;
 
-  const getBarColor = (className) => {
-    switch (className) {
-      case "Class 1":
-        return "#ff4d4f"; // Red color for Class 1
-      case "Class 2":
-        return "#3b82f6"; // Blue color for Class 2
-      default:
-        return "#e0e0e0"; // Default color
-    }
-  };
-
   return (
     <div className="flex justify-center items-center flex-col">
-      <audio
-        ref={audioRef}
-        src={
-          mockInterviewQuestion?.[activeQuestionIndex]?.audio
-            ? `url/to/your/question/audio/file/${mockInterviewQuestion[activeQuestionIndex]?.audio}`
-            : null
-        }
-        onEnded={() => setIsPlayingQuestion(false)}
-      />
-
       <div className="flex flex-col my-20 justify-center items-center bg-black rounded-lg p-5 relative">
+        <Image
+          src={"/webcam.png"}
+          width={200}
+          height={200}
+          className="absolute"
+          alt="webcam"
+          priority
+        />
+        {/* Webcam component */}
         <Webcam
-          audio={false}
-          videoConstraints={{ facingMode: "user" }}
           style={{ height: 300, width: "100%", zIndex: 10 }}
           mirrored={true}
         />
-
-        <ModelPrediction onPredictions={handleModelPredictions} />
+        {/* Webcam model prediction */}
+        <ModelPrediction onPredictions={handleWebcamPredictions} />
       </div>
-
       <Button
-        disabled={loading || isPlayingQuestion}
+        disabled={loading}
         variant="outline"
         className="my-10"
         onClick={StartStopRecording}
@@ -170,32 +167,23 @@ const RecordAnswerSection = ({
         )}
       </Button>
 
-      <div className="mt-5 w-full">
-        <h3 className="text-lg font-semibold">Real-time Feedback:</h3>
-        {modelFeedback.map((item, index) => (
-          <div key={index} className="mb-2">
-            <div className="text-base font-medium">{item.className}</div>
-            <div
-              style={{
-                backgroundColor: "#e0e0e0",
-                borderRadius: "10px",
-                height: "20px",
-                width: "100%",
-              }}
-            >
-              <div
-                style={{
-                  backgroundColor: getBarColor(item.className),
-                  height: "100%",
-                  borderRadius: "10px",
-                  width: `${item.probability * 100}%`,
-                  transition: "width 0.5s ease-in-out",
-                }}
-              />
-            </div>
-          </div>
-        ))}
+      {/* Real-time feedback section */}
+      <div className="mt-10 p-4 border rounded-lg w-full max-w-2xl bg-white">
+        <h3 className="text-lg font-semibold mb-2">Real-Time Feedback</h3>
+        <div className="mb-4">
+          <h4 className="font-medium">Audio Feedback:</h4>
+          <p>{audioFeedback || "No audio feedback available."}</p>
+        </div>
+        <div>
+          <h4 className="font-medium">Webcam Feedback:</h4>
+          <p>{webcamFeedback || "No webcam feedback available."}</p>
+        </div>
       </div>
+
+      {/* Audio Analysis Component */}
+      {isRecording && (
+        <AudioAnalysis handleAudioFeedback={handleAudioFeedback} />
+      )}
     </div>
   );
 };
