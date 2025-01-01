@@ -15,8 +15,15 @@ export default function RootLayout({ children }) {
     <ClerkProvider>
       <html lang="en">
         <body className={inter.className}>
-          <Toaster />
-          {children}
+        <Toaster />
+        {children}
+        <div class="background">
+  <div class="rectangle-18"></div>
+  <div class="rectangle-17"></div>
+  <div class="rectangle-16"></div>
+</div>
+
+         
         </body>
       </html>
     </ClerkProvider>

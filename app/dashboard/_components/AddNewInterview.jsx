@@ -1,12 +1,7 @@
 "use client";
 import React, { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import * as pdfjsLib from "pdfjs-dist";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,6 +14,11 @@ import { useUser } from "@clerk/nextjs";
 import moment from "moment";
 import { useRouter } from "next/navigation";
 
+// Ensure the workerSrc is set to the CDN for pdf.worker.min.js
+if (typeof window !== "undefined") {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js";
+}
+
 function AddNewInterview() {
   const [openDialog, setOpenDialog] = useState(false);
   const [jobPosition, setJobPosition] = useState("");
@@ -26,25 +26,69 @@ function AddNewInterview() {
   const [jobExperience, setJobExperience] = useState("");
   const [loading, setLoading] = useState(false);
   const [jsonResponse, setJsonResponse] = useState([]);
+  const [pdfText, setPdfText] = useState("");
   const { user } = useUser();
   const router = useRouter();
+
+  // Handle the file upload and parse the PDF
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    
+
+    const reader = new FileReader();
+
+    reader.onload = async (e) => {
+      const typedArray = new Uint8Array(e.target.result);
+
+      try {
+        const pdf = await pdfjsLib.getDocument(typedArray).promise;
+        console.log(`PDF loaded with ${pdf.numPages} pages.`);
+
+        // Get text content from all pages and log it
+        let fullText = "";
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items.map((item) => item.str).join(" ");
+          fullText += pageText + " "; // Append text from each page
+        }
+        setPdfText(fullText);
+        console.log("Extracted Text from Resume:", fullText); // Print the entire extracted text to the console
+      } catch (error) {
+        if (!pdfText) {
+          alert("Please upload a valid PDF resume.");
+          return;
+        }
+        
+        console.error("Error loading PDF:", error);
+      }
+    };
+
+    reader.readAsArrayBuffer(file);
+  };
 
   const onSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
   
-    const inputPrompt = `Job position: ${jobPosition}, Job Description: ${jobDescription}, Years of Experience: ${jobExperience}, Based on the Job Position, Job Description, and Years of Experience, provide ${process.env.NEXT_PUBLIC_INTERVIEW_QUESTION_COUNT} interview questions along with answers in JSON format. Each question and answer should be in the following format:
-    {
-      "question": "Your question here",
-      "answer": "Your answer here"
-    }`;
+    const inputPrompt = `
+      Job position: ${jobPosition}, 
+      Job Description: ${jobDescription}, 
+      Years of Experience: ${jobExperience},
+      Resume Content: ${pdfText ? pdfText : "No resume uploaded or could not extract text."}
+      Based on the Job Position, Job Description, Years of Experience, and Resume Content, provide ${process.env.NEXT_PUBLIC_INTERVIEW_QUESTION_COUNT} interview questions along with answers in JSON format.Asking question based on resume is necessary if uploaded.. Each question and answer should be in the following format:
+      {
+        "question": "Your question here",
+        "answer": "Your answer here"
+      }`;
   
     try {
       const result = await chatSession.sendMessage(inputPrompt);
       const responseText = await result.response.text();
       console.log("Raw response:", responseText);
   
-      // Attempt to extract the JSON part from the response
       const jsonMatch = responseText.match(/\[.*?\]/s);
       if (!jsonMatch) {
         throw new Error("No valid JSON array found in the response");
@@ -60,37 +104,34 @@ function AddNewInterview() {
   
         const jsonString = JSON.stringify(mockResponse);
         const res = await db.insert(MockInterview)
-          .values({
-            mockId: uuidv4(),
-            jsonMockResp: jsonString,
-            jobPosition: jobPosition,
-            jobDesc: jobDescription,
-            jobExperience: jobExperience,
-            createdBy: user?.primaryEmailAddress?.emailAddress,
-            createdAt: moment().format('DD-MM-YYYY'),
-          })
-          .returning({ mockId: MockInterview.mockId });
+  .values({
+    mockId: uuidv4(),
+    jsonMockResp: jsonString,
+    jobPosition: jobPosition,
+    jobDesc: jobDescription,
+    jobExperience: jobExperience,
+    createdBy: user?.primaryEmailAddress?.emailAddress,
+    createdAt: moment().format('DD-MM-YYYY'),
+    resumeText: pdfText, // Include the parsed resume text here
+  })
+  .returning({ mockId: MockInterview.mockId });
+
   
         setLoading(false);
         router.push(`dashboard/interview/${res[0]?.mockId}`);
       } catch (jsonError) {
         console.error("JSON parsing error:", jsonError);
-  
-        // Display an error message to the user
         alert("An error occurred while parsing the AI response. Please try again.");
       }
     } catch (error) {
       console.error("Error fetching interview questions:", error);
-  
-      // Display an error message to the user
       alert("An error occurred while generating interview questions. Please try again.");
     } finally {
       setLoading(false);
     }
   };
   
-  
-  
+
   return (
     <div>
       <div
@@ -140,6 +181,15 @@ function AddNewInterview() {
                     onChange={(e) => setJobExperience(e.target.value)}
                   />
                 </div>
+                <div className="my-3">
+                  <label>Upload Resume (PDF)</label>
+                  <Input
+                    type="file"
+                    accept=".pdf"
+                    onChange={handleFileUpload}
+                  />
+                </div>
+                
               </div>
               <div className="flex gap-5 justify-end">
                 <Button type="button" variant="ghost" onClick={() => setOpenDialog(false)}>

@@ -74,3 +74,169 @@
       @apply bg-background text-foreground;
     }
   }
+
+  /* styles/globals.css */
+
+@font-face {
+  font-family: 'Nasalization';
+  src: url('../public/fonts/nasalization-rg.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* Default font for the body */
+body {
+  font-family: 'Open Sans', sans-serif;
+  overflow: scroll;
+}
+/* global.css */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body, html {
+  height: 100%;
+  margin: 0;
+  background-color: black;
+  background-image:
+    linear-gradient(to right, rgba(211, 211, 211, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(211, 211, 211, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+  background-repeat: repeat;
+  background-attachment: fixed;
+}
+
+
+
+
+/* Centering the SVG */
+.background-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* Takes full viewport height */
+  position: relative;
+}
+
+.svg-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Optional: Make SVG smaller */
+.center-svg {
+  width: 150px;
+  height: 150px;
+}
+/* Background */
+.background {
+  position: absolute;
+  width: 1025.2px;
+  height: 1025.2px;
+  left: 127px;
+  top: 355px;
+  z-index: 3;
+  overflow-y: hidden;
+}
+
+/* Rectangle 18 */
+.rectangle-18 {
+  position: absolute;
+  width: 1021.87px;
+  height: 1021.87px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(179.81deg); /* Centering and rotation */
+  background: linear-gradient(180deg, rgba(13, 13, 13, 0.0625) 46.67%, rgba(76, 76, 121, 0.1875) 95%);
+  border-radius: 998.5px;
+}
+
+/* Rectangle 17 */
+.rectangle-17 {
+  position: absolute;
+  width: 893.16px;
+  height: 893.16px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(179.81deg); /* Centering and rotation */
+  background: linear-gradient(180deg, rgba(13, 13, 13, 0.0625) 46.67%, rgba(76, 76, 121, 0.1875) 95%);
+  border-radius: 998.5px;
+}
+
+/* Rectangle 16 */
+.rectangle-16 {
+  position: absolute;
+  width: 757.23px;
+  height: 757.23px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(359.81deg); /* Centering and rotation */
+  background: linear-gradient(359.81deg, rgba(13, 13, 13, 0.125) 46.69%, rgba(76, 76, 121, 0.375) 94.85%);
+  border-radius: 998.5px;
+}
+/* InterviewItemCard.css */
+.interview-card {
+  position: relative;
+  z-index: 10; /* Ensure the card comes forward */
+  padding: 20px;
+  background: #111;
+  opacity: 90%;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.interview-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+}
+
+.button-container {
+  display: flex;
+
+  gap: 5px;
+  margin-top: 1rem;
+}
+
+.button-container .w-full {
+  width: 48%;
+}
+
+button:focus {
+  outline: none;
+  box-shadow: none;
+}
+/* Add this CSS to bring the QuestionsSection component forward */
+.questions-section {
+  position: relative;
+  z-index: 20; /* Bring it in front */
+  padding: 20px;
+  background-color: #1a202c; /* Dark background */
+  border-radius: 8px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.questions-section:hover {
+  transform: translateY(-5px);
+  box-shadow: 0px 8px 12px rgba(0, 0, 0, 0.3);
+}
+
+.question-label {
+  cursor: pointer;
+}
+
+.question-label.active {
+  border-color: white;
+  color: white;
+}
+
+.question-label.inactive {
+  border-color: #4a5568; /* Gray */
+  color: #e2e8f0; /* Light gray */
+}

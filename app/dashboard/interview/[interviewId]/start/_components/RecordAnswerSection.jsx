@@ -1,4 +1,3 @@
-"use client";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
@@ -18,11 +17,13 @@ const RecordAnswerSection = ({
   mockInterviewQuestion,
   activeQuestionIndex,
   interviewData,
+  onNextQuestion, // Ensure this function is passed as a prop
+  setIsRecording, // Pass the setIsRecording function from parent
 }) => {
   const [userAnswer, setUserAnswer] = useState("");
   const { user } = useUser();
   const [loading, setLoading] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
+  const [isRecording, setIsRecordingState] = useState(false);
   const [webcamPredictions, setWebcamPredictions] = useState(null);
   const [audioFeedback, setAudioFeedback] = useState(null);
   const [webcamFeedback, setWebcamFeedback] = useState(null);
@@ -47,21 +48,38 @@ const RecordAnswerSection = ({
   }, [results]);
 
   useEffect(() => {
-    if (!isRecordingSpeech && userAnswer.length > 10) {
+    if (!isRecording && userAnswer.length > 10) {
       UpdateUserAnswer();
     }
   }, [userAnswer]);
 
-  const StartStopRecording = async () => {
+  useEffect(() => {
+    // Stop recording automatically when the next question is selected
     if (isRecording) {
-      stopSpeechToText();
-      setIsRecording(false);
-    } else {
+      stopRecording();
+    }
+  }, [activeQuestionIndex]); // Whenever the active question changes, stop the recording
+
+  const StartStopRecording = async () => {
+    setIsRecordingState((prevState) => !prevState);
+    setIsRecording((prevState) => !prevState); // Set isRecording state in the parent component
+
+    if (!isRecording) {
       startSpeechToText();
-      setIsRecording(true);
+    } else {
+      stopRecording();
     }
   };
 
+  const stopRecording = () => {
+    stopSpeechToText();
+    if (userAnswer?.length < 10) {
+      setLoading(false);
+      toast("Error while saving your answer, please record again");
+      return;
+    }
+    UpdateUserAnswer();
+  };
   const UpdateUserAnswer = async () => {
     console.log(userAnswer, "########");
     setLoading(true);
@@ -84,8 +102,8 @@ const RecordAnswerSection = ({
     );
     const mockJsonResp = result.response
       .text()
-      .replace("json", "")
-      .replace("", "");
+      .replace("```json", "")
+      .replace("```", "");
 
     console.log(
       "🚀 ~ file: RecordAnswerSection.jsx:47 ~ SaveUserAnswer ~ mockJsonResp:",
@@ -107,6 +125,7 @@ const RecordAnswerSection = ({
       toast("User Answer recorded successfully");
       setUserAnswer("");
       setResults([]);
+      onNextQuestion(); // Trigger the next question after saving
     }
     setResults([]);
     setLoading(false);
@@ -132,60 +151,63 @@ const RecordAnswerSection = ({
   if (error) return <p>Web Speech API is not available in this browser 🤷‍</p>;
 
   return (
-    <div className="flex justify-center items-center flex-col">
-      <div className="flex flex-col my-20 justify-center items-center bg-black rounded-lg p-5 relative">
-        <Image
-          src={"/webcam.png"}
-          width={200}
-          height={200}
-          className="absolute"
-          alt="webcam"
-          priority
-        />
-        {/* Webcam component */}
-        <Webcam
-          style={{ height: 300, width: "100%", zIndex: 10 }}
-          mirrored={true}
-        />
-        {/* Webcam model prediction */}
-        <ModelPrediction onPredictions={handleWebcamPredictions} />
-      </div>
-      <Button
-        disabled={loading}
-        variant="outline"
-        className="my-10"
-        onClick={StartStopRecording}
-      >
-        {isRecording ? (
-          <h2 className="text-red-600 items-center animate-pulse flex gap-2">
-            <StopCircle /> Stop Recording...
-          </h2>
-        ) : (
-          <h2 className="text-primary flex gap-2 items-center">
-            <Mic /> Record Answer
-          </h2>
-        )}
-      </Button>
+<div className="flex flex-col justify-center items-center h-screen">
+  {/* Webcam and Background Section */}
+  <div className="flex flex-col justify-center items-center bg-black rounded-lg p-4 relative z-0">
+    <Image
+      src={"/webcam.png"}
+      width={200}
+      height={200}
+      className="absolute"
+      alt="webcam"
+      priority
+    />
+    {/* Webcam component */}
+    <Webcam
+      style={{ height: 300, width: "100%", zIndex: 10 }}
+      mirrored={true}
+    />
+    {/* Webcam model prediction */}
+    <ModelPrediction onPredictions={handleWebcamPredictions} />
+  </div>
 
-      {/* Real-time feedback section */}
-      <div className="mt-10 p-4 border rounded-lg w-full max-w-2xl bg-white">
-        <h3 className="text-lg font-semibold mb-2">Real-Time Feedback</h3>
-        <div className="mb-4">
-          <h4 className="font-medium">Audio Feedback:</h4>
-          <p>{audioFeedback || "No audio feedback available."}</p>
-        </div>
-        <div>
-          <h4 className="font-medium">Webcam Feedback:</h4>
-          <p>{webcamFeedback || "No webcam feedback available."}</p>
-        </div>
-      </div>
+  {/* Record Answer Button */}
+  <Button
+    disabled={loading}
+    variant="outline"
+    className="my-4 z-10"
+    onClick={StartStopRecording}
+  >
+    {isRecording ? (
+      <h2 className="text-red-600 items-center animate-pulse flex gap-2">
+        <StopCircle /> Stop Recording...
+      </h2>
+    ) : (
+      <h2 className="text-primary flex gap-2 items-center">
+        <Mic /> Record Answer
+      </h2>
+    )}
+  </Button>
 
-      {/* Audio Analysis Component */}
-      {isRecording && (
-        <AudioAnalysis handleAudioFeedback={handleAudioFeedback} />
-      )}
+  {/* Real-time feedback section */}
+  <div className="p-4 border rounded-lg w-full max-w-2xl bg-white z-10">
+    <h3 className="text-lg font-semibold mb-2">Real-Time Feedback</h3>
+    <div className="mb-4">
+      <h4 className="font-medium">Audio Feedback:</h4>
+      <p>{audioFeedback || "No audio feedback available."}</p>
     </div>
+    <div>
+      <h4 className="font-medium">Webcam Feedback:</h4>
+      <p>{webcamFeedback || "No webcam feedback available."}</p>
+    </div>
+  </div>
+
+  {/* Audio Analysis Component */}
+  {isRecording && (
+    <AudioAnalysis handleAudioFeedback={handleAudioFeedback} />
+  )}
+</div>
+
   );
 };
-
 export default RecordAnswerSection;

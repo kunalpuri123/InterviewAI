@@ -8,7 +8,7 @@ const ModelPrediction = ({ onPredictions }) => {
   const [model, setModel] = useState(null);
   const [maxPrediction, setMaxPrediction] = useState(null); // To store the prediction with the highest probability
 
-  const URL = "https://teachablemachine.withgoogle.com/models/HwhJHY8IR/";
+  const URL = "https://teachablemachine.withgoogle.com/models/TKsXlQxYG/";
 
   useEffect(() => {
     const loadModel = async () => {
@@ -16,6 +16,11 @@ const ModelPrediction = ({ onPredictions }) => {
       const metadataURL = URL + "metadata.json";
 
       try {
+        // Fetching model and metadata with no-cors mode
+        const responseModel = await fetch(modelURL, { mode: "no-cors" });
+        const responseMetadata = await fetch(metadataURL, { mode: "no-cors" });
+        
+        // Use the response here for further processing if needed
         const model = await tmImage.load(modelURL, metadataURL);
         setModel(model);
       } catch (error) {
@@ -60,12 +65,19 @@ const ModelPrediction = ({ onPredictions }) => {
   };
 
   return (
-    <div style={{"opacity": 0}}>
+    <div style={{ opacity: 0 }}>
       {/* Display a progress bar for the prediction with the highest probability */}
       {maxPrediction && (
         <div style={{ margin: "20px 0" }}>
           <div>{maxPrediction.className}</div>
-          <div style={{ backgroundColor: "#e0e0e0", borderRadius: "10px", height: "20px", width: "100%" }}>
+          <div
+            style={{
+              backgroundColor: "#e0e0e0",
+              borderRadius: "10px",
+              height: "20px",
+              width: "100%",
+            }}
+          >
             <div
               style={{
                 backgroundColor: "#3b82f6",
