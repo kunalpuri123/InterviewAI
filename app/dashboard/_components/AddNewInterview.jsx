@@ -27,6 +27,7 @@ function AddNewInterview() {
   const [loading, setLoading] = useState(false);
   const [jsonResponse, setJsonResponse] = useState([]);
   const [pdfText, setPdfText] = useState("");
+  const [fileUploaded, setFileUploaded] = useState(false); // Track if file is uploaded
   const { user } = useUser();
   const router = useRouter();
 
@@ -34,8 +35,6 @@ function AddNewInterview() {
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (!file) return;
-
-    
 
     const reader = new FileReader();
 
@@ -55,14 +54,12 @@ function AddNewInterview() {
           fullText += pageText + " "; // Append text from each page
         }
         setPdfText(fullText);
+        setFileUploaded(true); // Mark file as uploaded
         console.log("Extracted Text from Resume:", fullText); // Print the entire extracted text to the console
       } catch (error) {
-        if (!pdfText) {
-          alert("Please upload a valid PDF resume.");
-          return;
-        }
-        
         console.error("Error loading PDF:", error);
+        setPdfText(""); // Ensure pdfText is cleared in case of an error
+        setFileUploaded(false); // Reset fileUploaded state on error
       }
     };
 
@@ -71,8 +68,15 @@ function AddNewInterview() {
 
   const onSubmit = async (e) => {
     e.preventDefault();
+
+    // Check if file is uploaded
+    if (!fileUploaded) {
+      alert("Please upload a valid resume.");
+      return; // Prevent form submission if no file is uploaded
+    }
+
     setLoading(true);
-  
+
     const inputPrompt = `
       Job position: ${jobPosition}, 
       Job Description: ${jobDescription}, 
@@ -83,40 +87,39 @@ function AddNewInterview() {
         "question": "Your question here",
         "answer": "Your answer here"
       }`;
-  
+
     try {
       const result = await chatSession.sendMessage(inputPrompt);
       const responseText = await result.response.text();
       console.log("Raw response:", responseText);
-  
+
       const jsonMatch = responseText.match(/\[.*?\]/s);
       if (!jsonMatch) {
         throw new Error("No valid JSON array found in the response");
       }
-  
+
       const jsonResponsePart = jsonMatch[0];
       console.log("Extracted JSON part:", jsonResponsePart);
-  
+
       try {
         const mockResponse = JSON.parse(jsonResponsePart.trim());
         console.log("Parsed JSON response:", mockResponse);
         setJsonResponse(mockResponse);
-  
+
         const jsonString = JSON.stringify(mockResponse);
         const res = await db.insert(MockInterview)
-  .values({
-    mockId: uuidv4(),
-    jsonMockResp: jsonString,
-    jobPosition: jobPosition,
-    jobDesc: jobDescription,
-    jobExperience: jobExperience,
-    createdBy: user?.primaryEmailAddress?.emailAddress,
-    createdAt: moment().format('DD-MM-YYYY'),
-    resumeText: pdfText, // Include the parsed resume text here
-  })
-  .returning({ mockId: MockInterview.mockId });
+          .values({
+            mockId: uuidv4(),
+            jsonMockResp: jsonString,
+            jobPosition: jobPosition,
+            jobDesc: jobDescription,
+            jobExperience: jobExperience,
+            createdBy: user?.primaryEmailAddress?.emailAddress,
+            createdAt: moment().format('DD-MM-YYYY'),
+            resumeText: pdfText, // Include the parsed resume text here
+          })
+          .returning({ mockId: MockInterview.mockId });
 
-  
         setLoading(false);
         router.push(`dashboard/interview/${res[0]?.mockId}`);
       } catch (jsonError) {
@@ -130,7 +133,6 @@ function AddNewInterview() {
       setLoading(false);
     }
   };
-  
 
   return (
     <div>
@@ -186,10 +188,10 @@ function AddNewInterview() {
                   <Input
                     type="file"
                     accept=".pdf"
+                    required
                     onChange={handleFileUpload}
                   />
                 </div>
-                
               </div>
               <div className="flex gap-5 justify-end">
                 <Button type="button" variant="ghost" onClick={() => setOpenDialog(false)}>
