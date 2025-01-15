@@ -16,8 +16,7 @@ import ModelPrediction from "./ModelPrediction"; // Import webcam prediction com
 const RecordAnswerSection = ({
   mockInterviewQuestion,
   activeQuestionIndex,
-  interviewData,
-  onNextQuestion, // Ensure this function is passed as a prop
+  interviewData, // Ensure this function is passed as a prop
   setIsRecording, // Pass the setIsRecording function from parent
 }) => {
   const [userAnswer, setUserAnswer] = useState("");
@@ -124,8 +123,7 @@ const RecordAnswerSection = ({
     if (resp) {
       toast("User Answer recorded successfully");
       setUserAnswer("");
-      setResults([]);
-      onNextQuestion(); // Trigger the next question after saving
+      setResults([]); 
     }
     setResults([]);
     setLoading(false);
@@ -142,11 +140,16 @@ const RecordAnswerSection = ({
 
   const handleAudioFeedback = (predictions) => {
     if (predictions.length > 0) {
+      const maxPrediction = predictions.reduce((prev, current) =>
+        parseFloat(prev.score) > parseFloat(current.score) ? prev : current
+      );
+  
       setAudioFeedback(
-        `Prediction: ${predictions[0].label} : ${predictions[0].score}%`
+        `Prediction: ${maxPrediction.label}, Probability: ${maxPrediction.score}%`
       );
     }
   };
+  
 
   if (error) return <p>Web Speech API is not available in this browser 🤷‍</p>;
 

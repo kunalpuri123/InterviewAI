@@ -12,7 +12,7 @@ const AudioAnalysis = ({ handleAudioFeedback }) => {
 
   // Initialize the Teachable Machine model
   const createModel = async () => {
-    const URL = "https://teachablemachine.withgoogle.com/models/wMiuVaLj_/"; // URL of your model
+    const URL = "https://teachablemachine.withgoogle.com/models/BEj4b0Ze-/"; // URL of your model
     const checkpointURL = URL + "model.json";
     const metadataURL = URL + "metadata.json";
 
