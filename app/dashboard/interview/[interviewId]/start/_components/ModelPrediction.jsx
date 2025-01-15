@@ -8,7 +8,7 @@ const ModelPrediction = ({ onPredictions }) => {
   const [model, setModel] = useState(null);
   const [maxPrediction, setMaxPrediction] = useState(null); // To store the prediction with the highest probability
 
-  const URL = "https://teachablemachine.withgoogle.com/models/TKsXlQxYG/";
+  const URL = "https://teachablemachine.withgoogle.com/models/QGq5dchJx/";
 
   useEffect(() => {
     const loadModel = async () => {
