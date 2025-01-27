@@ -21,7 +21,6 @@
     "@radix-ui/react-slot": "^1.0.2",
     "@splinetool/react-spline": "^4.0.0",
     "@splinetool/runtime": "^1.9.59",
-    "@teachablemachine/image": "^0.8.5",
     "@tensorflow-models/speech-commands": "^0.5.4",
     "@tensorflow/tfjs-core":"4.22.0",
     "canvas": "^3.1.0",
