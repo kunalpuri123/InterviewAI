@@ -2,7 +2,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": [
+        "./*"
+      ]
     },
     "lib": [
       "dom",
@@ -24,14 +26,17 @@
       {
         "name": "next"
       }
-    ]
+    ],
+    "target": "ES2017"
   },
   "include": [
+    "**/*.js",
+    "**/*.jsx", // Update the include pattern to only target js files
+    ".next/types/**/*.js", // Include JavaScript files
+    "app/dashboard/interview/[interviewId]/feedback/page.jsx", // Include JSX files
     "next-env.d.ts",
-    ".next/types/**/*.ts",
-    "**/*.ts",
-    "**/*.tsx"
-, "app/dashboard/interview/[interviewId]/feedback/page.jsx"  ],
+    ".next/types/**/*.ts"
+  ],
   "exclude": [
     "node_modules"
   ]

@@ -1,8 +1,20 @@
+"use client"
 import React from "react";
 import AddNewInterview from "./_components/AddNewInterview";
 import InterviewList from "./_components/InterviewList";
+import { useState, useEffect } from 'react';
 
 const Dashboard = () => {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return null;
+  }
+
   return (
     <div className="p-10">
       <h2 className="font-bold text-2xl">dashboard</h2>

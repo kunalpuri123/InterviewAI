@@ -9,6 +9,7 @@ import React, { useEffect, useState } from "react";
 import Webcam from "react-webcam";
 
 function Interview({ params }) {
+  
   const [interviewData, setInterviewData] = useState();
   const [webCamEnabled, setWebCamEnabled] = useState(false);
 
