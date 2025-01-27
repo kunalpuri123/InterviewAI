@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import * as tf from "@tensorflow/tfjs";
 import * as speechCommands from "@tensorflow-models/speech-commands";
 
 const AudioAnalysis = ({ handleAudioFeedback }) => {
