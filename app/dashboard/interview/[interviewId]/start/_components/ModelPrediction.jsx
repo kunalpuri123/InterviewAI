@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from "react";
-import * as tmImage from "@teachablemachine/image";
 
 const ModelPrediction = ({ onPredictions }) => {
   const webcamRef = useRef(null);
@@ -11,30 +10,42 @@ const ModelPrediction = ({ onPredictions }) => {
   const URL = "https://teachablemachine.withgoogle.com/models/QGq5dchJx/";
 
   useEffect(() => {
-    const loadModel = async () => {
-      const modelURL = URL + "model.json";
-      const metadataURL = URL + "metadata.json";
-
+    const loadScripts = async () => {
       try {
-        // Fetching model and metadata with no-cors mode
-        const responseModel = await fetch(modelURL, { mode: "no-cors" });
-        const responseMetadata = await fetch(metadataURL, { mode: "no-cors" });
-        
-        // Use the response here for further processing if needed
-        const model = await tmImage.load(modelURL, metadataURL);
-        setModel(model);
+        // Load TensorFlow.js and Teachable Machine Image libraries from the CDN
+        await new Promise((resolve, reject) => {
+          const tfScript = document.createElement("script");
+          tfScript.src = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js";
+          tfScript.onload = resolve;
+          tfScript.onerror = reject;
+          document.body.appendChild(tfScript);
+        });
+
+        await new Promise((resolve, reject) => {
+          const tmScript = document.createElement("script");
+          tmScript.src = "https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js";
+          tmScript.onload = resolve;
+          tmScript.onerror = reject;
+          document.body.appendChild(tmScript);
+        });
+
+        // Load the Teachable Machine model after the scripts are loaded
+        const modelURL = URL + "model.json";
+        const metadataURL = URL + "metadata.json";
+        const loadedModel = await window.tmImage.load(modelURL, metadataURL);
+        setModel(loadedModel);
       } catch (error) {
-        console.error("Error loading model:", error);
+        console.error("Error loading scripts or model:", error);
       }
     };
 
-    loadModel();
+    loadScripts();
   }, []);
 
   useEffect(() => {
     const setupWebcam = async () => {
       if (model) {
-        const webcam = new tmImage.Webcam(200, 200, true); // width, height, flip
+        const webcam = new window.tmImage.Webcam(200, 200, true); // width, height, flip
         await webcam.setup();
         await webcam.play();
         webcamRef.current = webcam; // Store the webcam instance in the ref
@@ -65,7 +76,7 @@ const ModelPrediction = ({ onPredictions }) => {
   };
 
   return (
-    <div style={{ opacity: 0 }}>
+    <div>
       {/* Display a progress bar for the prediction with the highest probability */}
       {maxPrediction && (
         <div style={{ margin: "20px 0" }}>
