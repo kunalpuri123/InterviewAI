@@ -6,15 +6,20 @@ import { CardWithSpline } from "@/components/ui/CardWithSpline";
 import { IconCloud } from "@/components/ui/CustomIcon"; // Ensure IconCloud is correctly exported
 import { StarBorder } from "@/components/ui/StarBorder";
 import { Spotlight } from "@/components/ui/Spotlight";
+import Image from "next/image";
+import core from "../public/core.png";
 
 export default function Home() {
-  const router = useRouter()
+  const router = useRouter();
 
   // Handle click event to navigate
-  const handleClick = () => {
-    router.push("/roadmaps") // Navigate to the '/dashboard' route
-  }
-  
+  const handleClick1 = () => {
+    router.push("/roadmaps"); // Navigate to the '/dashboard' route
+  };
+  const handleClick2 = () => {
+    router.push("/book"); // Navigate to the '/dashboard' route
+  };
+
   const slugs = [
     "typescript",
     "javascript",
@@ -47,7 +52,6 @@ export default function Home() {
     "sonarqube",
     "figma",
   ];
-  
 
   return (
     <div>
@@ -55,7 +59,6 @@ export default function Home() {
       <CardWithSpline />
       <div className="min-h-screen bg-black flex items-center justify-center px-6">
         {/* Responsive container for layout */}
-        
         <div className="flex flex-col md:flex-row items-center md:items-start gap-8 w-full max-w-7xl">
           {/* Left Section */}
           <div className="flex flex-col items-start space-y-4 text-center md:text-left">
@@ -64,7 +67,10 @@ export default function Home() {
               textClassName="text-[4rem] md:text-[6rem] font-bold text-white"
             />
             <StarBorder color="hsl(208, 55.60%, 5.30%)" speed="4s">
-              <button onClick={handleClick} className="text-white font-bold px-6 py-3 bg-black-500 rounded-lg shadow-md hover:bg-blue-600">
+              <button
+                onClick={handleClick1}
+                className="text-white font-bold px-6 py-3 bg-black-500 rounded-lg shadow-md hover:bg-blue-600"
+              >
                 Explore our Roadmaps
               </button>
             </StarBorder>
@@ -74,6 +80,34 @@ export default function Home() {
           <div className="flex items-center justify-center w-full max-w-lg relative md:ml-24 lg:ml-24">
             <div className="relative w-full">
               <IconCloud iconSlugs={slugs} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Second Section with Image */}
+      <div className="min-h-screen bg-black flex items-center justify-center px-6">
+        <div className="flex flex-col md:flex-row items-center md:items-start gap-8 w-full max-w-7xl">
+          {/* Left Section */}
+          <div className="flex flex-col items-start space-y-4 text-center md:text-left">
+            <AnimatedText
+              text="CoreSubjects"
+              textClassName="text-[4rem] md:text-[6rem] font-bold text-white"
+            />
+            <StarBorder color="hsl(208, 55.60%, 5.30%)" speed="4s">
+              <button
+                onClick={handleClick2}
+                className="text-white font-bold px-6 py-3 bg-black-500 rounded-lg shadow-md hover:bg-blue-600"
+              >
+                Explore Coresubjects
+              </button>
+            </StarBorder>
+          </div>
+
+          {/* Right Section with Image */}
+          <div className="flex items-center justify-center w-full max-w-lg relative md:ml-24 lg:ml-24">
+            <div className="relative w-full">
+              <Image src={core} alt="Core Image" />
             </div>
           </div>
         </div>

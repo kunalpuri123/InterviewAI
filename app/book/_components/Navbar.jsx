@@ -25,12 +25,6 @@ const Navbar = () => {
               <Link href="/" className="relative">
                 AI-Based Mock Interview
               </Link>
-              <Link href="/roadmaps" className="relative">
-                Roadmaps
-              </Link>
-              <Link href="/book" className="relative">
-                Core Subjects
-              </Link>
               <div className="absolute bottom-0 left-0 h-[2px] w-full bg-transparent group-hover:bg-[#2F2F7E] group-hover:shadow-[4px_4px_10px_rgba(47,47,126,1)] transition-all duration-500 transform group-hover:translate-x-0 translate-x-[-100%]" />
             </li>
             {/* Add more menu items as needed */}

@@ -1,4 +1,4 @@
-import { pgTable, serial, text, varchar } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, varchar, boolean, integer } from "drizzle-orm/pg-core";
 
 export const MockInterview = pgTable('MockInterview', {
     id: serial('id').primaryKey(),
@@ -23,3 +23,11 @@ export const UserAnswer = pgTable('userAnswer', {
     userEmail: varchar('userEmail'),
     createdAt: varchar('createdAt')
 });
+
+export const UserProgress = pgTable('UserProgress', {
+    id: serial('id').primaryKey(),
+    userEmail: varchar('userEmail').notNull(), // Assuming you want to use email for identification
+    chapterId: varchar('chapterId').notNull(), // To track each chapter
+    isCompleted: boolean('isCompleted').default(false), // Track whether the chapter is marked as complete
+    progressPercentage: integer('progressPercentage').default(0), // Track progress percentage (0-100)
+  });
