@@ -1,11 +1,11 @@
 "use client";
-import React, { useState ,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { chatSession } from "@/utils/GeminiAIModal";
+import { createChatSession } from "@/utils/GeminiAIModal";
 import { LoaderCircle } from "lucide-react";
 import { MockInterview } from "@/utils/schema";
 import { v4 as uuidv4 } from 'uuid';
@@ -14,15 +14,12 @@ import { useUser } from "@clerk/nextjs";
 import moment from "moment";
 import { useRouter } from "next/navigation";
 
-
-
 // Ensure the workerSrc is set to the CDN for pdf.worker.min.js
 if (typeof window !== "undefined") {
   pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
 }
 
 function AddNewInterview() {
-
   const [openDialog, setOpenDialog] = useState(false);
   const [jobPosition, setJobPosition] = useState("");
   const [jobDescription, setJobDescription] = useState("");
@@ -30,19 +27,16 @@ function AddNewInterview() {
   const [loading, setLoading] = useState(false);
   const [jsonResponse, setJsonResponse] = useState([]);
   const [pdfText, setPdfText] = useState("");
-  const [fileUploaded, setFileUploaded] = useState(false); // Track if file is uploaded
+  const [fileUploaded, setFileUploaded] = useState(false);
   const { user } = useUser();
   const router = useRouter();
-
-
-  const [mounted, setMounted] = useState(false);
+  const [chatSession, setChatSession] = useState(null);
 
   useEffect(() => {
-    // Set mounted to true after the component has mounted
-    setMounted(true);
+    const newChatSession = createChatSession();
+    setChatSession(newChatSession);
   }, []);
 
-  // Handle the file upload and parse the PDF
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -54,23 +48,19 @@ function AddNewInterview() {
 
       try {
         const pdf = await pdfjsLib.getDocument(typedArray).promise;
-        console.log(`PDF loaded with ${pdf.numPages} pages.`);
-
-        // Get text content from all pages and log it
         let fullText = "";
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
           const page = await pdf.getPage(pageNum);
           const textContent = await page.getTextContent();
           const pageText = textContent.items.map((item) => item.str).join(" ");
-          fullText += pageText + " "; // Append text from each page
+          fullText += pageText + " ";
         }
         setPdfText(fullText);
-        setFileUploaded(true); // Mark file as uploaded
-        console.log("Extracted Text from Resume:", fullText); // Print the entire extracted text to the console
+        setFileUploaded(true);
       } catch (error) {
         console.error("Error loading PDF:", error);
-        setPdfText(""); // Ensure pdfText is cleared in case of an error
-        setFileUploaded(false); // Reset fileUploaded state on error
+        setPdfText("");
+        setFileUploaded(false);
       }
     };
 
@@ -80,10 +70,9 @@ function AddNewInterview() {
   const onSubmit = async (e) => {
     e.preventDefault();
 
-    // Check if file is uploaded
     if (!fileUploaded) {
       alert("Please upload a valid resume.");
-      return; // Prevent form submission if no file is uploaded
+      return;
     }
 
     setLoading(true);
@@ -93,18 +82,22 @@ function AddNewInterview() {
       Job Description: ${jobDescription}, 
       Years of Experience: ${jobExperience},
       Resume Content: ${pdfText ? pdfText : "No resume uploaded or could not extract text."}
-      Based on the Job Position, Job Description, Years of Experience, and Resume Content, provide ${process.env.NEXT_PUBLIC_INTERVIEW_QUESTION_COUNT} interview questions along with answers in JSON format.Asking question based on resume is necessary if uploaded.. Each question and answer should be in the following format:
+      Based on the Job Position, Job Description, Years of Experience, and Resume Content, provide ${process.env.NEXT_PUBLIC_INTERVIEW_QUESTION_COUNT || 5} interview questions along with answers in JSON format. Asking questions based on the resume is necessary if uploaded. Each question and answer should be in the following format:
       {
         "question": "Your question here",
         "answer": "Your answer here"
       }`;
 
     try {
+      if (!chatSession) {
+        throw new Error("Chat session is not initialized.");
+      }
+
       const result = await chatSession.sendMessage(inputPrompt);
       const responseText = await result.response.text();
       console.log("Raw response:", responseText);
 
-      const jsonMatch = responseText.match(/\[.*?\]/s);
+      const jsonMatch = responseText.match(/\[\s*{[\s\S]*?}\s*\]/);
       if (!jsonMatch) {
         throw new Error("No valid JSON array found in the response");
       }
@@ -127,7 +120,7 @@ function AddNewInterview() {
             jobExperience: jobExperience,
             createdBy: user?.primaryEmailAddress?.emailAddress,
             createdAt: moment().format('DD-MM-YYYY'),
-            resumeText: pdfText, // Include the parsed resume text here
+            resumeText: pdfText,
           })
           .returning({ mockId: MockInterview.mockId });
 

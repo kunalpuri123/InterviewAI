@@ -79,7 +79,7 @@ const ModelPrediction = ({ onPredictions }) => {
     <div>
       {/* Display a progress bar for the prediction with the highest probability */}
       {maxPrediction && (
-        <div style={{ margin: "20px 0" }}>
+        <div style={{ color:"white", margin: "20px 0" }}>
           <div>{maxPrediction.className}</div>
           <div
             style={{

@@ -1,31 +1,23 @@
-"use client"
-import React from "react";
-import AddNewInterview from "./_components/AddNewInterview";
-import InterviewList from "./_components/InterviewList";
-import { useState, useEffect } from 'react';
+import { Conversation } from './interview/[interviewId]/start/_components/conversation'
 
-const Dashboard = () => {
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (!isMounted) {
-    return null;
-  }
-
+export default function Home() {
   return (
-    <div className="p-10">
-      <h2 className="font-bold text-2xl">dashboard</h2>
-      <h2 className="text-gray-500">Create and Start Your AI Mockup Interview</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 my-5">
-        <AddNewInterview/>
+    <main className="flex min-h-screen flex-col items-center justify-center p-12 bg-black-50">
+      <div className="max-w-3xl w-full text-center">
+        <h1 className="text-4xl font-bold mb-6 text-white">
+        <span className="text-white">Prep</span>
+        <i
+            className="bg-gradient-to-r from-purple-400 to-purple-600 text-transparent bg-clip-text animate-gradient-move"
+            style={{ display: 'inline-block' }}
+          >
+            Mate
+          </i>  AI Interview
+        </h1>
+        <p className="text-lg text-gray-700 mb-8">
+          Start a Interview with PrepMate technology.
+        </p>
+        <Conversation />
       </div>
-      {/* previous interview questions */}
-      <InterviewList/>
-    </div>
+    </main>
   );
-};
-
-export default Dashboard;
+}

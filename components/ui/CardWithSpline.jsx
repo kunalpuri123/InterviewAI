@@ -1,17 +1,15 @@
 'use client'
 
-
 import { useRouter } from "next/navigation";  
-
 import { Suspense, lazy, useRef, useState, useEffect, useCallback } from 'react';
 import { motion, useSpring, useTransform } from 'framer-motion';
-import { cn } from '@/lib/utils';  // Assuming you have this utility in your project
+import { cn } from '@/lib/utils';
 import { FeyButton } from './lockicon';
 
-// Lazy load the Spline component from the @splinetool package
+// Lazy load the Spline component
 const Spline = lazy(() => import('@splinetool/react-spline'));
 
-// Spotlight component to create an interactive spotlight effect on the screen
+// Spotlight Component
 function Spotlight({ className, size = 200, springOptions = { bounce: 0 } }) {
   const containerRef = useRef(null);
   const [isHovered, setIsHovered] = useState(false);
@@ -44,7 +42,7 @@ function Spotlight({ className, size = 200, springOptions = { bounce: 0 } }) {
   const router = useRouter();
 
   const handleClick = () => {
-    router.push("/dashboard"); // Navigate to the '/dashboard' route
+    router.push("/dashboard");
   };
 
   useEffect(() => {
@@ -80,76 +78,58 @@ function Spotlight({ className, size = 200, springOptions = { bounce: 0 } }) {
   );
 }
 
-// SplineScene component to load and render the 3D scene using Spline
+// SplineScene Component
 function SplineScene({ scene, className }) {
   return (
-    <Suspense
-      fallback={
-        <div className="w-full h-full flex items-center justify-center">
-          <span className="loader"></span>
-        </div>
-      }
-    >
-      <Spline
-        scene={scene}
-        className={className}
-      />
+    <Suspense fallback={<div className="w-full h-full flex items-center justify-center"><span className="loader"></span></div>}>
+      <Spline scene={scene} className={className} />
     </Suspense>
   );
 }
 
-// Card component that wraps the content and adds style
+// Card Component
 function Card({ className, children }) {
   return (
-    <div className={`rounded-lg  bg-card text-card-foreground shadow-sm ${className}`}>
+    <div className={`rounded-lg bg-card text-card-foreground shadow-sm ${className}`}>
       {children}
     </div>
   );
 }
 
-// Main component combining Spotlight, SplineScene, and Card
+// Main Component: CardWithSpline
 export function CardWithSpline() {
   return (
-    <Card className="w-full h-[500px] bg-black/[0.96] relative overflow-hidden">
-      
-      <Spotlight
-        className="-top-40 left-0 md:left-60 md:-top-20"
-        fill="white"
-      />
-
-      <div className="flex h-full bg-black">
-        {/* Left content */}
-        <div className="flex-1 p-8 relative z-10 flex flex-col justify-center">
-        <h1
-          className="text-2xl md:text-4xl font-normal leading-[47.52px] text-left group hover:scale-105 transition-all duration-500"
-          style={{
-            fontFamily: 'Nasalization, sans-serif',
-            letterSpacing: '-0.05em',
-          }}
-        >
-          <span className="text-white">Prep</span>
-          <i
-            className="bg-gradient-to-r from-purple-400 to-purple-600 text-transparent bg-clip-text animate-gradient-move"
-            style={{ display: 'inline-block' }}
+    <Card className="w-full h-auto bg-black/[0.96] relative overflow-hidden">
+      <div className="flex flex-col md:flex-row h-auto bg-black items-center justify-between p-6 md:p-8">
+        {/* Left Content */}
+        <div className="flex-1 relative z-10 flex flex-col justify-center text-center md:text-left">
+          <h1
+            className="text-2xl md:text-4xl font-normal leading-[47.52px] group hover:scale-105 transition-all duration-500"
+            style={{
+              fontFamily: 'Nasalization, sans-serif',
+              letterSpacing: '-0.05em',
+            }}
           >
-            Mate
-          </i>
-        </h1>
-          <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-neutral-50 to-neutral-400">
-          MOCK INTERVIEW 
+            <span className="text-white">Prep</span>
+            <i className="bg-gradient-to-r from-purple-400 to-purple-600 text-transparent bg-clip-text animate-gradient-move">
+              Mate
+            </i>
+          </h1>
+          <h1 className="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-neutral-50 to-neutral-400">
+            MOCK INTERVIEW
           </h1>
           <p className="mt-4 text-neutral-300 max-w-lg">
-          "Master your interviews, tackle challenges, and unlock career opportunities."
+            "Master your interviews, tackle challenges, and unlock career opportunities."
           </p>
-       
-          
         </div>
-        <div className="min-h-screen p-8 flex items-center justify-center">
-      <FeyButton  >Start Interview</FeyButton>
-    </div>
 
-        {/* Right content */}
-        <div className="flex-1 relative">
+        {/* Button Section */}
+        <div className="flex justify-center md:justify-start w-full md:w-auto mt-6 md:mt-0">
+          <FeyButton>Start Interview</FeyButton>
+        </div>
+
+        {/* Right Content */}
+        <div className="flex-1 relative w-full max-w-md md:max-w-none">
           <SplineScene 
             scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"
             className="w-full h-full"

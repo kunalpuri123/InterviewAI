@@ -15,6 +15,13 @@
       "when": 1738012225738,
       "tag": "0001_medical_sharon_carter",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1738828568248,
+      "tag": "0002_brave_leopardon",
+      "breakpoints": true
     }
   ]
 }

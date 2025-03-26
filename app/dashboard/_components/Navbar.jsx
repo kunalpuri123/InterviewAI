@@ -4,33 +4,21 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { MdArrowDropDownCircle } from 'react-icons/md';
 import { UserButton, useUser } from '@clerk/nextjs';
+import { useRouter } from "next/navigation";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user } = useUser(); // Fetch the user object to check authentication
+  const router = useRouter();
 
   return (
     <nav className="bg-[#0F0F0F] shadow-[0px_2px_17.7px_0px_#2F2F7E] w-full h-[80px] flex items-center justify-between px-4 md:px-10">
-      {/* Left - Dropdown Menu */}
-      <div className="relative group">
-        <button
-          className="text-white font-bold text-base md:text-lg"
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          <MdArrowDropDownCircle className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} size={30} />
-        </button>
-        {isOpen && (
-          <ul className="absolute left-0 bg-[#0F0F0F] text-white shadow-lg transition-all duration-300">
-            <li className="px-4 py-2 relative group hover:bg-gray-700 hover:font-bold">
-              <Link href="/" className="relative">
-                AI-Based Mock Interview
-              </Link>
-              <div className="absolute bottom-0 left-0 h-[2px] w-full bg-transparent group-hover:bg-[#2F2F7E] group-hover:shadow-[4px_4px_10px_rgba(47,47,126,1)] transition-all duration-500 transform group-hover:translate-x-0 translate-x-[-100%]" />
-            </li>
-            {/* Add more menu items as needed */}
-          </ul>
-        )}
-      </div>
+      <button
+        onClick={() => router.back()}
+        className="text-white font-bold text-base md:text-lg hover:text-gray-400 transition"
+      >
+        ⬅
+      </button>
 
       {/* Middle - Logo */}
       <div className="flex items-center justify-center mx-auto">

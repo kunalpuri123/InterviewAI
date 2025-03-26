@@ -31,3 +31,11 @@ export const UserProgress = pgTable('UserProgress', {
     isCompleted: boolean('isCompleted').default(false), // Track whether the chapter is marked as complete
     progressPercentage: integer('progressPercentage').default(0), // Track progress percentage (0-100)
   });
+
+  export const UserPayment = pgTable('UserPayment', {
+    id: serial('id').primaryKey(),
+    userEmail: varchar('userEmail').notNull(),
+    hasPaid: boolean('hasPaid').default(false), // Tracks if payment is done
+    interviewCount: integer('interviewCount').default(0), // Number of interviews taken
+    createdAt: varchar('createdAt'),
+});

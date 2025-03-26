@@ -38,8 +38,9 @@ const {
     }
   ];
 
-  export const chatSession = model.startChat({
+  export const createChatSession = () => {  // Export a FUNCTION!
+    return model.startChat({
       generationConfig,
       safetySettings,
     });
-
+  };
