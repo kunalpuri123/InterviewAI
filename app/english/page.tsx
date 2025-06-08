@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { englishQuestions, englishCategories, getEnglishQuestionsByCategory } from "@/lib/aptitude-questions"
 import { Search, BookOpen, Clock, Target, TrendingUp } from "lucide-react"
-
+import Navbar from "@/components/ui/Navbar"
 export default function EnglishPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
@@ -50,7 +50,10 @@ export default function EnglishPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+  <>
+    <Navbar/>
+        <div className="container mx-auto px-4 py-8">
+     
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-4">English Preparation</h1>
         <p className="text-muted-foreground mb-6">
@@ -220,5 +223,6 @@ export default function EnglishPage() {
         )}
       </div>
     </div>
+    </>
   )
 }

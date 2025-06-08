@@ -13,7 +13,7 @@ import {
   getQuantitativeQuestionsByCategory,
 } from "@/lib/aptitude-questions"
 import { Search, Calculator, Clock, Target, TrendingUp } from "lucide-react"
-
+import Navbar from "@/components/ui/Navbar"
 export default function QuantitativePage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
@@ -54,6 +54,8 @@ export default function QuantitativePage() {
   }
 
   return (
+    <>
+    <Navbar/>
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-4">Quantitative Reasoning</h1>
@@ -223,5 +225,6 @@ export default function QuantitativePage() {
         )}
       </div>
     </div>
+    </>
   )
 }

@@ -132,7 +132,10 @@ export default function Home() {
       {/* Hero Section */}
       <div className="text-center py-16">
         <h1 className="text-4xl md:text-6xl font-bold mb-6">
-          Complete <span className="text-primary">Preparation Platform</span>
+                   <span className="text-white">Prep</span>
+            <i className="bg-gradient-to-r from-purple-400 to-purple-600 text-transparent bg-clip-text animate-gradient-move">
+              Mate
+            </i> Code <span className="text-primary">Buddy</span>
         </h1>
         <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
           Master coding, quantitative reasoning, and English with our comprehensive platform. Practice problems, track

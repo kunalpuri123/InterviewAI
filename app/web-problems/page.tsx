@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { webProblems, getCategoryColor, getDifficultyColor } from "@/lib/web-problems"
 import { Search, Clock, Target } from "lucide-react"
-
+import Navbar from "@/components/ui/Navbar"
 export default function WebProblemsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
@@ -29,6 +29,10 @@ export default function WebProblemsPage() {
   const allDifficulties = Array.from(new Set(webProblems.map((p) => p.difficulty)))
 
   return (
+    <>
+    <Navbar/>
+   
+    
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-4">Web Development Challenges</h1>
@@ -142,5 +146,6 @@ export default function WebProblemsPage() {
         </div>
       )}
     </div>
+     </>
   )
 }

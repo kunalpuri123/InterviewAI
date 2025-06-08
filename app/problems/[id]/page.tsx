@@ -14,7 +14,7 @@ import { SolutionModal } from "@/components/solution-modal"
 import { getProblemById, getDifficultyColor } from "@/lib/problems"
 import { executeCode } from "@/lib/code-execution"
 import { Play, RotateCcw, Eye, AlertTriangle, CheckCircle, XCircle, Send } from "lucide-react"
-
+import Navbar from "@/components/ui/Navbar"
 export default function ProblemPage() {
   const params = useParams()
   const problemId = Number.parseInt(params.id as string)
@@ -153,6 +153,8 @@ export default function ProblemPage() {
   }
 
   return (
+    <>
+    <Navbar/>
     <div className="h-[calc(100vh-4rem)] flex">
       {/* Left Panel - Problem Description */}
       <div className="w-1/2 border-r">
@@ -319,5 +321,6 @@ export default function ProblemPage() {
       {/* Solution Modal */}
       <SolutionModal problemId={problemId} isOpen={showSolution} onClose={() => setShowSolution(false)} />
     </div>
+    </>
   )
 }

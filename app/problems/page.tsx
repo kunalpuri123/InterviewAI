@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { problems, getDifficultyColor } from "@/lib/problems"
 import { Search } from "lucide-react"
-
+import Navbar from "@/components/ui/Navbar"
 export default function ProblemsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [difficultyFilter, setDifficultyFilter] = useState("all")
@@ -28,6 +28,8 @@ export default function ProblemsPage() {
   const allTags = Array.from(new Set(problems.flatMap((p) => p.tags)))
 
   return (
+    <>
+    <Navbar/>
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-4">Problems</h1>
@@ -115,5 +117,6 @@ export default function ProblemsPage() {
         </div>
       )}
     </div>
+    </>
   )
 }

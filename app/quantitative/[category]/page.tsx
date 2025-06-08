@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { AptitudeQuiz } from "@/components/aptitude-quiz"
 import { quantitativeQuestions, getQuantitativeQuestionsByCategory } from "@/lib/aptitude-questions"
 import { ArrowLeft, Play, Trophy } from "lucide-react"
-
+import Navbar from "@/components/ui/Navbar"
 export default function QuantitativeCategoryPage() {
   const params = useParams()
   const router = useRouter()
@@ -86,6 +86,9 @@ export default function QuantitativeCategoryPage() {
   }
 
   return (
+    <>
+    <Navbar/>
+   
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
         <Button variant="outline" onClick={() => router.push("/quantitative")}>
@@ -233,5 +236,6 @@ export default function QuantitativeCategoryPage() {
         </div>
       </div>
     </div>
+    </>
   )
 }

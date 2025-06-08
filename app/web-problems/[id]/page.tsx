@@ -14,7 +14,7 @@ import { CodeEditor } from "@/components/code-editor"
 import { WebPreview } from "@/components/web-preview"
 import { getWebProblemById, getCategoryColor, getDifficultyColor } from "@/lib/web-problems"
 import { RotateCcw, CheckCircle, Clock, Target, Lightbulb, Trophy, Send } from "lucide-react"
-
+import Navbar from "@/components/ui/Navbar"
 interface ValidationResult {
   requirement: string
   passed: boolean
@@ -179,7 +179,11 @@ export default function WebProblemPage() {
   const progressPercentage = problem.maxScore > 0 ? (totalScore / problem.maxScore) * 100 : 0
 
   return (
+    <>
+    <Navbar/>
+    
     <div className="flex h-screen w-full overflow-hidden">
+      
       {/* Left Panel - Problem Description */}
       <div className="w-1/3 min-w-[400px] border-r bg-background flex flex-col">
         <ScrollArea className="flex-1">
@@ -395,5 +399,6 @@ export default function WebProblemPage() {
         />
       </div>
     </div>
+    </>
   )
 }
