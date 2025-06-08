@@ -13,6 +13,7 @@ import type { AptitudeQuestion } from "@/lib/aptitude-questions"
 interface AptitudeQuizProps {
   questions: AptitudeQuestion[]
   title: string
+    passage?: string
   onComplete: (score: number, totalQuestions: number, results: QuestionResult[]) => void
 }
 
@@ -21,6 +22,7 @@ interface QuestionResult {
   userAnswer: string | null
   isCorrect: boolean
   timeSpent: number
+    passage?: string
 }
 
 export function AptitudeQuiz({ questions, title, onComplete }: AptitudeQuizProps) {
