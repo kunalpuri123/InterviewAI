@@ -48,7 +48,7 @@ export function AptitudeQuiz({ questions, title, onComplete }: AptitudeQuizProps
   useEffect(() => {
     if (currentQuestion) {
       setTimeLeft(currentQuestion.timeLimit)
-      setSelectedAnswer("") // Clear selection for new question
+      setSelectedAnswer("")
       setQuestionStartTime(Date.now())
     }
   }, [currentQuestionIndex, currentQuestion])
@@ -70,7 +70,6 @@ export function AptitudeQuiz({ questions, title, onComplete }: AptitudeQuizProps
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1)
     } else {
-      // Quiz completed
       setIsQuizCompleted(true)
       const score = newResults.filter((r) => r.isCorrect).length
       onComplete(score, questions.length, newResults)
@@ -109,7 +108,6 @@ export function AptitudeQuiz({ questions, title, onComplete }: AptitudeQuizProps
           <CardDescription>Here are your results for {title}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Score Summary */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card>
               <CardContent className="p-4 text-center">
@@ -133,7 +131,6 @@ export function AptitudeQuiz({ questions, title, onComplete }: AptitudeQuizProps
             </Card>
           </div>
 
-          {/* Detailed Results */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Question Review</h3>
             <div className="space-y-3 max-h-96 overflow-y-auto">
