@@ -18,14 +18,10 @@ export default function ConversationSummary() {
       try {
         const [conversationRes, audioRes] = await Promise.all([
           fetch(`https://api.elevenlabs.io/v1/convai/conversations/${conversation_id}`, {
-            headers: {
-              'xi-api-key: sk_3f62890c311087589e86c7b2132836063de7aa9c86e3f9db',
-            },
+         headers: {  "xi-api-key": "sk_3f62890c311087589e86c7b2132836063de7aa9c86e3f9db",},
           }),
           fetch(`https://api.elevenlabs.io/v1/convai/conversations/${conversation_id}/audio`, {
-            headers: {
-              'xi-api-key:sk_3f62890c311087589e86c7b2132836063de7aa9c86e3f9db',
-            },
+              headers: {  "xi-api-key": "sk_3f62890c311087589e86c7b2132836063de7aa9c86e3f9db",},
           }),
         ]);
 
