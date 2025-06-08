@@ -4,7 +4,9 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "@/components/ui/sonner";
 import {Squares} from "@/components/ui/squares-background"
 import { Spotlight } from "@/components/ui/Spotlight";
-
+import { ThemeProvider } from "@/components/theme-provider"
+import { Navigation } from "@/components/navigation"
+import "./globals.css"
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
@@ -15,14 +17,18 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <ClerkProvider>
-      <html lang="en">
+      <html lang="en" suppressHydrationWarning>
         
         <body className={inter.className}>
         <Toaster />
-        <div>
-        
-        {children}
-        </div>
+      
+ <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <div className="min-h-screen bg-background">
+           
+            <main>{children}</main>
+          </div>
+        </ThemeProvider>
+       
         
         
         <div className="fixed inset-0 z-[-1]">
