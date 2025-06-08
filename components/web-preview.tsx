@@ -226,7 +226,7 @@ export function WebPreview({ files, title, onValidationResult, requirements = []
     if (files.nodejs || files.mongodb) {
       const results = WebValidator.validate(
         problemId,
-        document.createElement("div"), // dummy document
+        document, // dummy document
         files.css || "",
         files.nodejs || files.mongodb || "",
         requirements,
