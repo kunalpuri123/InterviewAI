@@ -10,6 +10,7 @@ export interface AptitudeQuestion {
   explanation: string;
   timeLimit: number; // in seconds
   tags: string[];
+  passage?: string ;
 }
 
 export interface QuantitativeQuestion extends AptitudeQuestion {
