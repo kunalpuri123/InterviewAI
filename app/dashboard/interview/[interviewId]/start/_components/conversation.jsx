@@ -1,216 +1,216 @@
-"use client";
-import Script from "next/script";
-import { useState, useCallback, useEffect } from "react";
-import { useConversation } from "@11labs/react";
-import { db } from "@/utils/db"; // Drizzle ORM
-import { UserPayment, MockInterview } from "@/utils/schema"; 
-import { eq } from "drizzle-orm";
-import Webcam from "react-webcam";
-import { useUser } from "@clerk/nextjs";
-import { useRouter } from "next/navigation"; // Import router
-import ModelPrediction from "./ModelPrediction";
-import Prepmate from "./prepmate.png"; // Corrected import
+'use client';
 
-export function Conversation() {
-  const [isPaid, setIsPaid] = useState(false);
+import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
+import { chatSession } from "@/utils/GeminiAIModal"; // Assumes your Gemini setup is in lib/gemini.js
+
+export default function ConversationSummary() {
+  const { conversation_id } = useParams();
+  const [conversationData, setConversationData] = useState(null);
+  const [audioUrl, setAudioUrl] = useState(null);
+  const [structuredFeedback, setStructuredFeedback] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [razorpayLoaded, setRazorpayLoaded] = useState(false);
-  const [interviewData, setInterviewData] = useState(null);
-  const [conversationStatus, setConversationStatus] = useState("Disconnected");
-  const [conversationId, setConversationId] = useState(null);
-  const { user } = useUser();
-  const router = useRouter(); // Corrected router initialization
 
-  const conversation = useConversation({
-    onConnect: () => console.log("Connected"),
-    onDisconnect: () => console.log("Disconnected"),
-    onMessage: (message) => console.log("Message:", message),
-    onError: (error) => console.error("Error:", error),
-  });
-
+  // Fetch from ElevenLabs
   useEffect(() => {
-    if (typeof window.Razorpay !== "undefined") {
-      setRazorpayLoaded(true);
-    }
-  }, []);
+    if (!conversation_id) return;
 
-  useEffect(() => {
-    const fetchPaymentStatus = async () => {
-      if (!user) return; // Ensure user is available
+    const fetchData = async () => {
       try {
-        const userEmail = user.primaryEmailAddress?.emailAddress;
-        const paymentData = await db
-          .select()
-          .from(UserPayment)
-          .where(eq(UserPayment.userEmail, userEmail))
-          .execute();
+        const [conversationRes, audioRes] = await Promise.all([
+          fetch(`https://api.elevenlabs.io/v1/convai/conversations/${conversation_id}`, {
+            headers: {
+              'xi-api-key': process.env.NEXT_PUBLIC_ELEVEN_API_KEY,
+            },
+          }),
+          fetch(`https://api.elevenlabs.io/v1/convai/conversations/${conversation_id}/audio`, {
+            headers: {
+              'xi-api-key': process.env.NEXT_PUBLIC_ELEVEN_API_KEY,
+            },
+          }),
+        ]);
 
-        if (paymentData.length > 0 && paymentData[0].hasPaid) {
-          setIsPaid(true);
+        const data = await conversationRes.json();
+        setConversationData(data);
+
+        const audioBlob = await audioRes.blob();
+        setAudioUrl(URL.createObjectURL(audioBlob));
+
+        // Send to Gemini
+        const transcriptText = data.transcript
+          ?.map((msg) => `${msg.role === 'agent' ? 'AI' : 'User'}: ${msg.message}`)
+          .join('\n');
+
+        const inputPrompt = `
+You are an AI interview evaluator. Analyze the following conversation between an AI interviewer and a candidate. Your task is to:
+
+1. For each response given by the user, provide:
+- A rating out of 5
+- The user's actual answer
+- A better or ideal version of the answer
+- Constructive feedback for improvement
+
+2. Then provide a summary of:
+- Grammar
+- Voice Tone
+- Confidence/Posture (from sentence clarity, assertiveness)
+- Scope of Improvement
+
+Return only valid JSON in this format:
+{
+  "responses": [
+    {
+      "rating": "4/5",
+      "userAns": "I'm applying as a React developer.",
+      "correctAns": "I'm applying for the React Developer role with 2 years of experience.",
+      "feedback": "Add your years of experience and key skills."
+    }
+  ],
+  "overallAnalysis": {
+    "grammar": "Some grammar issues",
+    "voiceTone": "Confident",
+    "confidence": "Moderate confidence",
+    "scopeOfImprovement": "Add more specific examples"
+  }
+}
+
+Here is the transcript:
+${transcriptText}
+`;
+
+        setLoading(true);
+        const result = await chatSession.sendMessage(inputPrompt);
+        const responseText = await result.response.text();
+
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          setStructuredFeedback(parsed);
+        } else {
+          console.warn('No JSON match found in Gemini response:', responseText);
         }
       } catch (error) {
-        console.error("Error fetching payment status:", error);
+        console.error('Error:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchPaymentStatus();
-  }, [user]);
+    fetchData();
+  }, [conversation_id]);
 
-  const startConversation = useCallback(async () => {
-    if (!isPaid) {
-      console.log("Please complete the payment first");
-      return;
-    }
-
-    try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
-      const id = await conversation.startSession({
-        agentId: "HHBSc1OCIr1sm6Pcbrwr",
-      });
-      console.log("Conversation ID:", id);
-      setConversationId(id);
-      setConversationStatus("Listening");
-    } catch (error) {
-      console.error("Error starting conversation:", error);
-      setConversationStatus("Error");
-    }
-  }, [conversation, isPaid]);
-
-  const stopConversation = useCallback(async () => {
-    try {
-      await conversation.endSession();
-
-      if (interviewData) {
-        await db
-          .update(MockInterview)
-          .set({
-            mockId: interviewData.mockId,
-            createdAt: new Date().toISOString(),
-          })
-          .where(eq(MockInterview.id, interviewData.id))
-          .execute();
-        console.log("Interview status updated.");
-      }
-
-      const userEmail = user?.primaryEmailAddress?.emailAddress;
-      if (userEmail) {
-        await db
-          .update(UserPayment)
-          .set({ hasPaid: false })
-          .where(eq(UserPayment.userEmail, userEmail))
-          .execute();
-        setIsPaid(false);
-        console.log("Payment status set to false.");
-      }
-
-      if (conversationId) {
-        router.push(`/dashboard/summary/${conversationId}`);
-      } else {
-        console.error("No conversation ID available.");
-      }
-    } catch (error) {
-      console.error("Error stopping conversation:", error);
-    }
-  }, [conversation, user, interviewData, conversationId, router]);
-
-  const initiatePayment = async () => {
-    setLoading(true);
-    try {
-      if (!razorpayLoaded) {
-        console.error("Razorpay is not loaded yet. Please try again.");
-        setLoading(false);
-        return;
-      }
-
-      const response = await fetch("https://serverprepmate-1.onrender.com/order", {
-        method: "POST",
-        body: JSON.stringify({
-          amount: 150000, // ₹1500 in paise
-          currency: "INR",
-          receipt: "qwsaq1",
-        }),
-        headers: { "Content-Type": "application/json" },
-      });
-
-      const order = await response.json();
-
-      const options = {
-        key: "rzp_test_IMa6OmxshE0B6f",
-        amount: order.amount,
-        currency: order.currency,
-        name: "PrepMate",
-        description: "Test Transaction",
-        image: Prepmate, 
-        order_id: order.id,
-        handler: async function (response) {
-          try {
-            const validateRes = await fetch("https://serverprepmate-1.onrender.com/order/validate", {
-              method: "POST",
-              body: JSON.stringify({ ...response, order_id: order.id }),
-              headers: { "Content-Type": "application/json" },
-            });
-
-            if (!validateRes.ok) throw new Error("Payment verification failed.");
-
-            setIsPaid(true);
-            alert("✅ Payment verified successfully. You can now start the conversation.");
-          } catch (error) {
-            console.error("❌ Payment verification failed:", error);
-            alert("Payment verification failed. Please try again.");
-          }
-        },
-        prefill: {
-          name: "Web Dev Matrix",
-          email: "webdevmatrix@example.com",
-          contact: "9000000000",
-        },
-        notes: {
-          address: "Razorpay Corporate Office",
-        },
-        theme: {
-          color: "#3399cc",
-        },
-      };
-
-      const rzp1 = new window.Razorpay(options);
-      rzp1.on("payment.failed", function (response) {
-        alert(response.error.description);
-      });
-      rzp1.open();
-    } catch (error) {
-      console.error("Payment initiation failed:", error);
-      alert("Payment initiation failed. Please try again later.");
-    } finally {
-      setLoading(false);
-    }
+  const handlePrint = () => {
+    const content = document.getElementById('printableContent');
+    const printWindow = window.open('', '', 'height=600,width=800');
+    printWindow.document.write('<html><head><title>Prepmate</title></head><body>');
+    printWindow.document.write('<h1>Prepmate</h1>');
+    printWindow.document.write(content.innerHTML);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.print();
   };
 
+  if (loading) return <div className="text-white">Loading...</div>;
+
+  if (!conversationData) return <div className="text-white">No data available</div>;
+
+  const { transcript, analysis } = conversationData;
+  const transcriptSummary = analysis?.transcript_summary || 'No summary available';
+
   return (
-    <div className="flex flex-col items-center gap-4 p-4 bg-black-100 rounded-lg shadow-md">
-      <Script
-        src="https://checkout.razorpay.com/v1/checkout.js"
-        strategy="beforeInteractive"
-        onLoad={() => setRazorpayLoaded(true)}
-      />
+    <div className="conversation-summary p-4 bg-black text-white rounded-md">
+      <h2 className="text-lg font-semibold">Conversation Summary</h2>
 
-      <h2 className="text-lg font-semibold text-white">PrepMate AI Interview</h2>
-      
-      {isPaid && <Webcam style={{ height: 300, width: "100%" }} mirrored={true} />}
-      {isPaid && <ModelPrediction />}
+      {/* 🧠 Transcript */}
+      <div className="mt-4">
+        <h3 className="text-lg font-semibold">Conversation:</h3>
+        <div className="mt-2 text-sm">
+          {transcript?.map((message, index) => (
+            <div key={index} className="mb-2">
+              <strong>{message.role === 'agent' ? 'AI:' : 'User:'}</strong> {message.message}
+            </div>
+          ))}
+        </div>
+        <h3 className="text-lg font-semibold mt-4">Analysis Summary:</h3>
+        <p>{transcriptSummary}</p>
+      </div>
 
-      {!isPaid ? (
-        <>
-          <p className="text-lg text-gray-700 mb-4">Pay to start your Mock Interview</p>
-          <button onClick={initiatePayment} disabled={loading || !razorpayLoaded} className="px-4 py-2 bg-green-500 text-white rounded-lg">
-            {loading ? "Processing..." : "Pay Now"}
-          </button>
-        </>
-      ) : (
-        <>
-          <button onClick={startConversation} className="px-4 py-2 bg-blue-500 text-white rounded-lg">Start</button>
-          <button onClick={stopConversation} className="px-4 py-2 bg-red-500 text-white rounded-lg">Stop</button>
-        </>
+      {/* 🖨️ Print Button */}
+      <button
+        onClick={handlePrint}
+        className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+      >
+        Print
+      </button>
+
+      {/* 🎧 Audio */}
+      {audioUrl && (
+        <div className="mt-4">
+          <audio controls>
+            <source src={audioUrl} type="audio/mp3" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
       )}
+
+      {/* 📥 Download */}
+      {audioUrl && (
+        <a
+          href={audioUrl}
+          download={`conversation_${conversation_id}.mp3`}
+          className="mt-4 block px-4 py-2 bg-green-500 text-white rounded-md text-center hover:bg-green-600"
+        >
+          Download Audio
+        </a>
+      )}
+
+      {/* 📊 Gemini Feedback */}
+      {structuredFeedback && (
+        <div className="mt-8">
+          <h2 className="text-xl font-bold">Structured Feedback</h2>
+          {structuredFeedback.responses?.map((item, idx) => (
+            <div key={idx} className="my-4 border rounded-lg p-4 bg-gray-900">
+              <h2 className="text-red-500">
+                <strong>Rating:</strong> {item.rating}
+              </h2>
+              <h2 className="bg-red-50 text-red-900 p-2 rounded-md text-sm">
+                <strong>Your Answer:</strong> {item.userAns}
+              </h2>
+              <h2 className="bg-green-50 text-green-900 p-2 rounded-md text-sm">
+                <strong>Correct Answer Looks Like:</strong> {item.correctAns}
+              </h2>
+              <h2 className="bg-blue-50 text-blue-900 p-2 rounded-md text-sm">
+                <strong>Feedback:</strong> {item.feedback}
+              </h2>
+            </div>
+          ))}
+
+          <div className="mt-6 p-4 border rounded-lg bg-white text-black">
+            <h2 className="text-xl font-bold mb-2">Overall Interview Analysis</h2>
+            <p><strong>Grammar:</strong> {structuredFeedback.overallAnalysis.grammar}</p>
+            <p><strong>Voice Tone:</strong> {structuredFeedback.overallAnalysis.voiceTone}</p>
+            <p><strong>Confidence/Posture:</strong> {structuredFeedback.overallAnalysis.confidence}</p>
+            <p><strong>Scope of Improvement:</strong> {structuredFeedback.overallAnalysis.scopeOfImprovement}</p>
+          </div>
+        </div>
+      )}
+
+      {/* 🖨️ Hidden Printable Content */}
+      <div id="printableContent" style={{ display: 'none' }}>
+        <div className="p-4 bg-white text-black rounded-md">
+          <h2 className="text-lg font-semibold">Conversation Summary</h2>
+          <div className="mt-4">
+            <h3 className="text-lg font-semibold">Conversation:</h3>
+            {transcript?.map((message, index) => (
+              <div key={index} className="mb-2">
+                <strong>{message.role === 'agent' ? 'AI:' : 'User:'}</strong> {message.message}
+              </div>
+            ))}
+            <h3 className="text-lg font-semibold mt-4">Analysis Summary:</h3>
+            <p>{transcriptSummary}</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
