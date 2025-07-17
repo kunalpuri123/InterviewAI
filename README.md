@@ -49,59 +49,48 @@ Prepmate is a full-stack, AI-powered mock interview platform designed to simulat
 
 ```mermaid
 graph TD
-    subgraph CLIENT
-        A[User]
-        B[Next.js UI]
-        C[Clerk Auth]
-    end
+  subgraph Frontend (Next.js)
+    A1[User Interface] --> A2[Login/Signup via Clerk]
+    A1 --> A3[Upload Resume & JD]
+    A1 --> A4[Start Interview Session]
+    A1 --> A5[Take DSA & Aptitude Test]
+    A1 --> A6[View Feedback & Roadmap]
+  end
 
-    subgraph BACKEND
-        D[Next.js API Routes]
-        E[Gemini API - AI Question Generator]
-        F[ElevenLabs TTS - AI Voice]
-        G[Audio Analyser]
-        H[Video Analyser]
-        I[DSA + Aptitude Module]
-    end
+  subgraph Backend (Node.js API)
+    B1[Authentication Middleware (Clerk)] --> B2[Session Validation]
+    B2 --> B3[Resume & JD Handling]
+    B2 --> B4[Interview Session Handler]
+    B4 --> B5[Gemini API: Ask Questions]
+    B4 --> B6[ElevenLabs TTS Engine]
+    B4 --> B7[Audio Analyzer]
+    B4 --> B8[Video Analyzer]
+    B2 --> B9[DSA/Aptitude Evaluation]
+    B2 --> B10[Feedback Generator]
+    B2 --> B11[Roadmap Generator]
+  end
 
-    subgraph DATABASE
-        J[Neon DB (Serverless PostgreSQL)]
-    end
+  subgraph Database (Neon DB)
+    D1[User Profiles]
+    D2[Resume & JD Data]
+    D3[Session Logs]
+    D4[DSA Results]
+    D5[Audio/Video Feedback]
+    D6[Roadmaps]
+  end
 
-    %% Auth Flow
-    A --> C
-    C --> B
-
-    %% Interview Flow
-    A -->|Enter JD & Role| B
-    B -->|Send JD + Role| E
-    E -->|Returns AI Question| B
-    B -->|Send to TTS| F
-    F -->|Return voice| B
-    B --> A
-
-    %% Response Flow
-    A -->|Answers| B
-    B -->|Video Analysis| H
-    B -->|Audio Analysis| G
-    H --> B
-    G --> B
-
-    %% Data Save
-    B -->|Send Results| D
-    D -->|Save Feedback| J
-
-    %% DSA Roadmap Flow
-    A -->|Open Roadmap| B
-    B -->|Fetch DSA Topics| I
-    I -->|Submit Code + Quizzes| D
-    D -->|Store DSA Score| J
-
-    %% Feedback Flow
-    B -->|Get Final Report| D
-    D -->|Fetch Data| J
-    D --> B
-    B --> A
+  A2 --> B1
+  A3 --> B3 --> D2
+  A4 --> B4 --> B5
+  B5 --> D3
+  B6 --> D3
+  B7 --> D5
+  B8 --> D5
+  A5 --> B9 --> D4
+  B10 --> D5
+  B11 --> D6
+  A6 --> D5
+  A6 --> D6
 ```
 
 ---
