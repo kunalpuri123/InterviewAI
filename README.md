@@ -22,7 +22,57 @@ Prepmate is a full-stack, AI-powered mock interview platform designed to simulat
 - 🧠 **DSA + Aptitude Learning Module**:
   - Roadmap-based progress tracking
   - DSA coding questions with test case validation
-  - Topic-wise aptitude quizzes with instant results
+```mermaid
+graph TD
+  %% Frontend Section
+  subgraph Frontend_NextJS
+    A1[User Interface]
+    A2[Login / Signup via Clerk]
+    A3[Enter JD and Role]
+    A4[Start Interview Session]
+    A5[Take DSA & Aptitude Tests]
+    A6[View Feedback & Roadmap]
+  end
+
+  %% Backend Section
+  subgraph Backend_NodeJS
+    B1[Authentication Middleware - Clerk]
+    B2[Session Validation]
+    B3[JD Handler]
+    B4[Interview Engine]
+    B5[Gemini API - Question Generator]
+    B6[ElevenLabs TTS - Voice Output]
+    B7[Audio Analyzer]
+    B8[Video Analyzer]
+    B9[DSA/Aptitude Evaluator]
+    B10[Feedback Generator]
+    B11[Roadmap Manager]
+  end
+
+  %% Database Section
+  subgraph NeonDB_Postgres
+    D1[Users Table]
+    D2[JD & Session Logs]
+    D3[Audio/Video Feedback]
+    D4[DSA Results]
+    D5[Aptitude Results]
+    D6[Roadmap Data]
+  end
+
+  %% Flow Connections
+  A2 --> B1
+  A3 --> B3 --> D2
+  A4 --> B4 --> B5
+  B5 --> D2
+  B6 --> D2
+  B7 --> D3
+  B8 --> D3
+  A5 --> B9 --> D4
+  B10 --> D3
+  B11 --> D6
+  A6 --> D3
+  A6 --> D6
+```  - Topic-wise aptitude quizzes with instant results
 - 📊 **Personalized Feedback Report**:
   - Highlights strengths and weaknesses
   - Suggests improvements
@@ -47,51 +97,7 @@ Prepmate is a full-stack, AI-powered mock interview platform designed to simulat
 
 ## 🧠 System Architecture
 
-```mermaid
-graph TD
-  subgraph Frontend (Next.js)
-    A1[User Interface] --> A2[Login/Signup via Clerk]
-    A1 --> A3[Upload Resume & JD]
-    A1 --> A4[Start Interview Session]
-    A1 --> A5[Take DSA & Aptitude Test]
-    A1 --> A6[View Feedback & Roadmap]
-  end
 
-  subgraph Backend (Node.js API)
-    B1[Authentication Middleware (Clerk)] --> B2[Session Validation]
-    B2 --> B3[Resume & JD Handling]
-    B2 --> B4[Interview Session Handler]
-    B4 --> B5[Gemini API: Ask Questions]
-    B4 --> B6[ElevenLabs TTS Engine]
-    B4 --> B7[Audio Analyzer]
-    B4 --> B8[Video Analyzer]
-    B2 --> B9[DSA/Aptitude Evaluation]
-    B2 --> B10[Feedback Generator]
-    B2 --> B11[Roadmap Generator]
-  end
-
-  subgraph Database (Neon DB)
-    D1[User Profiles]
-    D2[Resume & JD Data]
-    D3[Session Logs]
-    D4[DSA Results]
-    D5[Audio/Video Feedback]
-    D6[Roadmaps]
-  end
-
-  A2 --> B1
-  A3 --> B3 --> D2
-  A4 --> B4 --> B5
-  B5 --> D3
-  B6 --> D3
-  B7 --> D5
-  B8 --> D5
-  A5 --> B9 --> D4
-  B10 --> D5
-  B11 --> D6
-  A6 --> D5
-  A6 --> D6
-```
 
 ---
 
